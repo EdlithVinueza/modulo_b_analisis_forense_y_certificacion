@@ -1,0 +1,38 @@
+package ec.edu.uce.certificadorforense.infrastructure.adapters.hash;
+
+import ec.edu.uce.certificadorforense.core.ports.out.GeneradorHashPort;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
+/**
+ * Adaptador de infraestructura: cálculo SHA-512 con {@code java.security.MessageDigest}.
+ * Sin dependencias externas.
+ */
+public class SHA512Adapter implements GeneradorHashPort {
+
+    @Override
+    public String calcularSHA512(byte[] datos) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-512");
+            byte[] hashBytes = digest.digest(datos);
+            return bytesAHex(hashBytes);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-512 no disponible en la JVM", e);
+        }
+    }
+
+    @Override
+    public String calcularSHA512(String texto) {
+        return calcularSHA512(texto.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private String bytesAHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder(bytes.length * 2);
+        for (byte b : bytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
+    }
+}

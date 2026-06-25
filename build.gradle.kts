@@ -1,0 +1,65 @@
+plugins {
+    id("java")
+    application
+}
+
+group = "org.example"
+version = "1.0-SNAPSHOT"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation("com.drewnoakes:metadata-extractor:2.20.0")
+
+    // TwelveMonkeys: permite leer PSD con ImageIO.read() compositeando todas las capas visibles
+    implementation("com.twelvemonkeys.imageio:imageio-psd:3.11.0")
+    // Core necesario para que TwelveMonkeys funcione
+    implementation("com.twelvemonkeys.imageio:imageio-core:3.11.0")
+    implementation("com.twelvemonkeys.common:common-lang:3.11.0")
+    implementation("com.twelvemonkeys.common:common-io:3.11.0")
+    implementation("com.twelvemonkeys.common:common-image:3.11.0")
+
+    // Lombok: elimina boilerplate de getters, setters y builders
+    compileOnly("org.projectlombok:lombok:1.18.46")
+    annotationProcessor("org.projectlombok:lombok:1.18.46")
+
+    // Gson: serialización JSON del expediente
+    implementation("com.google.code.gson:gson:2.11.0")
+
+    // ZXing: generación de código QR (Opción A — ID interno)
+    implementation("com.google.zxing:core:3.5.3")
+    implementation("com.google.zxing:javase:3.5.3")
+
+    // iText 7: generación del PDF del certificado + PdfSigner (firma digital real)
+    implementation("com.itextpdf:itext7-core:7.2.6")
+    implementation("com.itextpdf:sign:7.2.6")
+    implementation("com.itextpdf:html2pdf:4.0.5")
+
+    // Thymeleaf: motor de plantillas HTML
+    implementation("org.thymeleaf:thymeleaf:3.1.2.RELEASE")
+
+    // BouncyCastle: proveedor criptográfico obligatorio para iText 7 PdfSigner
+    implementation("org.bouncycastle:bcpkix-jdk15on:1.70")
+    implementation("org.bouncycastle:bcprov-jdk15on:1.70")
+
+    // JUnit 5 para pruebas unitarias
+    testImplementation(platform("org.junit:junit-bom:5.10.2"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+application {
+    mainClass.set("ec.edu.uce.certificadorforense.Main")
+}
+
+tasks.test {
+    useJUnitPlatform()
+    testLogging {
+        events("passed", "skipped", "failed")
+        showStandardStreams = true   // muestra System.out.println de los tests
+        showExceptions = true
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
+}

@@ -1,0 +1,1 @@
+rootProject.name = "Pruebas_Imagenes"
