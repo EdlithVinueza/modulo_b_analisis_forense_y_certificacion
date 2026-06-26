@@ -21,6 +21,7 @@ import ec.edu.uce.certificadorforense.core.state.*;
 import ec.edu.uce.certificadorforense.core.rules.imagen.*;
 import ec.edu.uce.certificadorforense.core.rules.psd.*;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.esteganografia.EsteganografiaPNGAdapter;
+import ec.edu.uce.certificadorforense.infrastructure.adapters.esteganografia.EsteganografiaJPEGAdapter;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.firma.FirmadorP12Adapter;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.firma.FirmadorPDFAdapter;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.hash.SHA512Adapter;
@@ -93,7 +94,14 @@ public class ProcesoCertificacionTest {
         String rutaRootCa = "/home/edlith/Documentos/UCE 26-26/TESIS/CLAVES LINUX/sistema_certificado/sistema.p12";
         FirmadorPDFPort firmadorPDF = new FirmadorPDFAdapter(rutaRootCa);
         GeneradorPDFPort generadorPDF = new GeneradorPDFAdapter();
-        EsteganografiaPort estegano = new EsteganografiaPNGAdapter();
+        
+        EsteganografiaPort estegano;
+        if (extension.equalsIgnoreCase("jpg") || extension.equalsIgnoreCase("jpeg")) {
+            estegano = new EsteganografiaJPEGAdapter();
+        } else {
+            estegano = new EsteganografiaPNGAdapter();
+        }
+        
         ExpedienteRepositoryPort repositorio = new ExpedienteJsonAdapter(DIRECTORIO_SALIDA + "/expedientes");
 
         // ── 2. Construir servicios de dominio ────────────────────────────────
@@ -287,12 +295,10 @@ public class ProcesoCertificacionTest {
                 + "\",\"hash\":\"" + certificado.getHashExpedienteFirmado() + "\"}";
         byte[] imagenCert = null;
         try {
-            if (extension.equalsIgnoreCase("png")) {
-                byte[] imgBytes = Files.readAllBytes(archivoImagen.toPath());
-                imagenCert = estegano.inyectar(imgBytes, jsonEstegano);
-                contexto.setImagenCertificada(imagenCert);
-                assertNotNull(imagenCert, "No se inyectó esteganografía");
-            }
+            byte[] imgBytes = Files.readAllBytes(archivoImagen.toPath());
+            imagenCert = estegano.inyectar(imgBytes, jsonEstegano);
+            contexto.setImagenCertificada(imagenCert);
+            assertNotNull(imagenCert, "No se inyectó esteganografía");
         } catch (Exception e) {
             fail("Falló la esteganografía: " + e.getMessage());
         }
@@ -304,14 +310,9 @@ public class ProcesoCertificacionTest {
         Files.write(dirSalida.resolve(nombrePDF), contexto.getPdfCertificado());
         System.out.println("  PDF guardado: " + dirSalida.resolve(nombrePDF).toAbsolutePath());
 
-        if (extension.equalsIgnoreCase("png")) {
-            String nombrePNG = "obra-certificada.png";
-            Files.write(dirSalida.resolve(nombrePNG), imagenCert);
-            System.out.println("   PNG certificado guardado: " + dirSalida.resolve(nombrePNG).toAbsolutePath());
-        } else {
-            System.out.println(
-                    "   Esteganografía en JPG no soportada por el adaptador actual, saltando guardado de imagen...");
-        }
+        String nombreImagenCertificada = certificado.getIdCertificado() + "-obra-certificada." + extension;
+        Files.write(dirSalida.resolve(nombreImagenCertificada), imagenCert);
+        System.out.println("   Imagen certificada guardada: " + dirSalida.resolve(nombreImagenCertificada).toAbsolutePath());
 
         publisher.publicar(new EventoCertificadoEmitido(certificado));
 

@@ -1,14 +1,17 @@
-# Documentación del Sistema de Certificación Forense Verisart
+# Documentación del Modulo B
 
-## Propósito del Proyecto
-El Sistema de Certificación Forense  es una plataforma orientada a obras gráficas digitales. Su propósito principal es analizar, preservar y registrar evidencias de autoría mediante procedimientos forenses, criptográficos y documentales.
-El sistema genera evidencia técnica verificable que permite demostrar la existencia de una obra digital en un momento determinado y conserva información relevante sobre su proceso de creación y autenticidad.
+## Función: 
+Analizar y certificar obras Digitales 
+
+## Propósito del Modulo 
+Su propósito principal es analizar, preservar y registrar evidencias de autoría mediante procedimientos forenses, criptográficos y documentales.
+El modulo  genera evidencia técnica verificable que permite demostrar la existencia de una obra digital en un momento determinado y conserva información relevante sobre su proceso de creación y autenticidad.
 
 ---
 
 ## Flujo General del Análisis y Certificación
 
-El proceso completo se divide en 4 fases principales, controladas mediante el patrón **State**, asegurando que no se pueda omitir ninguna validación forense ni paso legal.
+El proceso completo se divide en 4 fases principales, controladas mediante el patrón [**State**](#patron-state), asegurando que no se pueda omitir ninguna validación forense.
 
 ```mermaid
 graph TD
@@ -42,25 +45,178 @@ graph TD
     C4 --> Fin([Proceso Completado])
 ```
 
-### 🔍 ¿Qué se inserta y qué NO se inserta?
+### ¿Qué se inserta y qué NO se inserta?
 
 Uno de los pilares del sistema es mantener la integridad de la obra original y no saturar su peso.
 
-**1. ¿Qué se inserta en la imagen (PNG)?**
-**Se inserta SOLAMENTE un texto muy pequeño.** 
-Específicamente, se inyecta un JSON mínimo con dos datos: el `id` del certificado y el `hash` del expediente firmado.
-*Ejemplo exacto:* `{"id":"CERT-12345", "hash":"a1b2c3d4..."}`
-Esta inserción se hace mediante **esteganografía**, lo que significa que el dato se oculta en los bytes (como un chunk `tEXt` en el caso del PNG) sin alterar visualmente la imagen original.
+#### **1. ¿Qué se inserta en la imagen (PNG y JPEG)?**
+**Se inserta solamente un texto muy pequeño.** 
+Específicamente, se inyecta un JSON  con dos datos: el `id` del certificado al que la obra pertenece y el `hash` del expediente firmado por el autor de la obra.
 
-**2. ¿Qué NO se inserta en la imagen?**
+*Ejemplo exacto:* `{"id":"CERT-12345", "hash":"a1b2c3d4..."}`
+
+Esta inserción se hace mediante **esteganografía a nivel de metadatos (estructura de archivo)**. Esto significa que el dato se inyecta en bloques de bytes específicos según el formato, **sin alterar visualmente los píxeles originales**. Se eligió este enfoque para conservar la integridad artística de la obra al 100%.
+
+##### Esteganografía en formato PNG
+En los archivos PNG, la información se inyecta utilizando un chunk de texto estandarizado (`tEXt`). Este bloque se coloca intencionalmente justo antes del marcador de fin de archivo (`IEND`), evitando tocar los bloques de datos de compresión visual (`IDAT`).
+
+**Dependencias:** Java nativo (`java.io`, `java.util.zip.CRC32`). No requiere librerías externas.
+
+**Fragmento de Código (`EsteganografiaPNGAdapter.java`):**
+```java
+// Localizar posición del chunk IEND (últimos 12 bytes del PNG)
+int posicionIEND = buscarPosicionIEND(imagenOriginal);
+
+// Ensamblar: todo antes de IEND + nuevo chunk + IEND
+ByteArrayOutputStream baos = new ByteArrayOutputStream();
+baos.write(imagenOriginal, 0, posicionIEND);
+baos.write(chunkData); // Inyección del JSON en el chunk tEXt
+baos.write(imagenOriginal, posicionIEND, imagenOriginal.length - posicionIEND);
+```
+
+```text
+Estructura Binaria del PNG Certificado:
+┌────────────────────────┐
+│ Firma PNG (8 bytes)    │
+├────────────────────────┤
+│ Chunk IHDR (Cabecera)  │
+├────────────────────────┤
+│ Chunk IDAT (Píxeles)   │ ◄── (Intacto, sin modificar)
+├────────────────────────┤
+│ Chunk tEXt (NUEVO)     │ ◄── [ Inyección JSON: {"id":..., "hash":...} ]
+├────────────────────────┤
+│ Chunk IEND (Fin)       │
+└────────────────────────┘
+```
+
+##### Esteganografía en formato JPEG/JPG
+En los archivos JPEG, la aproximación es diferente. Se crea un segmento de aplicación reservado llamado `APP11` (marcador hex `FF EB`). Este segmento se inyecta inmediatamente después del marcador de inicio de imagen o *Start Of Image* (`SOI` -> `FF D8`), aislando nuestra firma digital de los metadatos tradicionales (`APP1` EXIF) y de los componentes visuales.
+
+**Dependencias:** Java nativo (`java.io`). No requiere librerías externas.
+
+**Fragmento de Código (`EsteganografiaJPEGAdapter.java`):**
+```java
+// Escribir SOI original (FF D8)
+baos.write(imagenOriginal, 0, 2);
+
+// Inyección del Segmento APP11 (FF EB + longitud + datos JSON)
+baos.write(MARKER_FF);
+baos.write(MARKER_EB);
+baos.write((longitudSegmento >> 8) & 0xFF);
+baos.write(longitudSegmento & 0xFF);
+baos.write(datosContenido);
+
+// Resto del JPEG original intacto (sin el SOI inicial)
+baos.write(imagenOriginal, 2, imagenOriginal.length - 2);
+```
+
+```text
+Estructura Binaria del JPEG Certificado:
+┌────────────────────────┐
+│ Marcador SOI (FF D8)   │ ◄── (Inicio de la imagen)
+├────────────────────────┤
+│ Segmento APP11 (NUEVO) │ ◄── [ Inyección JSON: FF EB + Longitud + JSON ]
+├────────────────────────┤
+│ Segmento APP0 / APP1   │ ◄── (Metadatos EXIF originales intactos)
+├────────────────────────┤
+│ ... (DQT, DHT, SOF) ...│
+├────────────────────────┤
+│ Segmento SOS (Píxeles) │ ◄── (Intacto, sin modificar)
+├────────────────────────┤
+│ Marcador EOI (FF D9)   │
+└────────────────────────┘
+```
+
+> [!WARNING]
+> **Limitación por Compresión en Redes Sociales**
+> Debido a que esta esteganografía se realiza inyectando bloques de datos a nivel de metadatos (y no modificando agresivamente los píxeles), existe una limitación técnica: **la compresión destructiva**. Si el autor envía la imagen certificada a través de redes sociales (WhatsApp, Facebook, Twitter, Instagram, etc.) usando los visores normales, estas plataformas aplican algoritmos de re-compresión que **eliminan automáticamente todos los metadatos no esenciales para ahorrar espacio**. Como resultado, el certificado inyectado se perderá. Para que la imagen mantenga su validez pericial al ser transferida, debe enviarse estrictamente como **"Archivo Adjunto / Documento"** o a través de plataformas en la nube sin pérdida (Google Drive, WeTransfer, etc.).
+
+##### ** ¿Qué NO se inserta en la imagen?**
 - **NO se inserta todo el expediente:** Los nombres, historial de capas y resultados de validaciones no van dentro de la imagen. Esto evita corromper el archivo visual.
-- **NO se inserta la firma electrónica como tal:** Solo va el hash (la huella digital).
+- **NO se inserta la firma electrónica como tal:** Solo se inserta el hash del expediente firmado (la huella digital única).
 - **El archivo fuente (PSD) NO se modifica en absoluto:** Solo se analiza y se deja intacto. No se le inyecta nada.
 
-**3. ¿Dónde se guarda el resto de la información?**
-Absolutamente todos los datos extensos (el expediente en formato JSON, el resultado del análisis forense, los datos del autor y la firma electrónica completa) **se insertan y guardan en el documento PDF generado**. 
+#### 2. ¿Qué se inserta en el Certificado (PDF) y con qué técnica?
 
-El flujo de confianza funciona de la siguiente manera: Si alguien tiene la imagen certificada, extrae el texto oculto (`id` y `hash`). Con ese `id`, puede buscar el expediente en el sistema (o abrir el PDF asociado). Luego, calcula el hash del expediente y lo compara con el `hash` oculto en la imagen. Si coinciden, significa que la imagen y el expediente están criptográficamente vinculados.
+A diferencia de las imágenes donde solo inyectamos un puntero, en el documento PDF generado se guarda **absolutamente toda la información pericial y legal de la obra**. El PDF recibe tres niveles de inyección de datos que se complementan entre sí para asegurar inmutabilidad técnica y trazabilidad:
+
+##### Nivel 1: Diccionario (Metadatos XMP)
+**Propósito:** Indexación rápida a nivel de sistema operativo sin necesidad de analizar el contenido del PDF o abrirlo. Permite que los motores de búsqueda encuentren el certificado directamente a través del hash de la obra.
+
+**Fragmento de Código (`GeneradorPDFAdapter.java`):**
+```java
+// Se inyecta en la cabecera (Header) del archivo PDF
+PdfDocumentInfo info = pdf.getDocumentInfo();
+info.setTitle("Certificado Verisart — " + certificado.getIdCertificado());
+info.setKeywords("idCertificado=" + certificado.getIdCertificado()
+        + "; idExpediente=" + certificado.getIdExpediente()
+        + "; hash=" + certificado.getHashExpedienteFirmado());
+```
+
+##### Nivel 2: Técnica de Archivo Adjunto (Embedded Files)
+**Propósito:** Contención de datos estructurados. Incrusta literalmente el archivo `expediente-firmado.json` íntegro dentro del contenedor del PDF. **Es fundamental notar que este archivo adjunto contiene la firma criptográfica (P12) del autor** generada en la Fase 3. Esto asegura que tanto la evidencia forense cruda como la firma legal del artista viajen permanentemente con el certificado visual como un adjunto indivisible.
+
+**Fragmento de Código (`GeneradorPDFAdapter.java`):**
+```java
+// El JSON se empaqueta como un archivo adjunto binario dentro de la estructura Catalog
+PdfFileSpec adjunto = PdfFileSpec.createEmbeddedFileSpec(
+        pdf, expedienteJson.getBytes(StandardCharsets.UTF_8),
+        "Expediente Firmado Verisart", "expediente-firmado.json",
+        null, new PdfName("application/json")
+);
+pdf.addFileAttachment("expediente-firmado.json", adjunto);
+```
+
+##### Nivel 3: Firma Electrónica Avanzada (PADES - CMS)
+**Propósito:** Sellado e inmutabilidad. Tras inyectar el diseño visual, los metadatos y el JSON adjunto, todo el documento es envuelto y cerrado criptográficamente usando un certificado institucional (`root_ca.p12`). Si alguien altera un píxel visual o modifica un carácter del JSON oculto, el sello se rompe de inmediato.
+
+**Fragmento de Código (`FirmadorPDFAdapter.java`):**
+```java
+// Firma Criptográfica PADES sobre el documento y sus adjuntos usando SHA-512
+PdfSigner signer = new PdfSigner(reader, baosFirmado, new StampingProperties());
+IExternalSignature firma = new PrivateKeySignature(clavePrivada, DigestAlgorithms.SHA512, BouncyCastleProvider.PROVIDER_NAME);
+signer.signDetached(new BouncyCastleDigest(), firma, cadena, null, null, null, 0, PdfSigner.CryptoStandard.CMS);
+```
+
+##### Diagrama: ¿Cómo se complementan en la arquitectura del PDF?
+El siguiente diagrama ilustra cómo cada inserción tiene un lugar específico en la estructura y cómo la firma actúa como la bóveda de seguridad que blinda todo el contenedor.
+
+```mermaid
+graph TD
+    subgraph "Contenedor PDF Generado"
+        A[Capa Visual: Diseño A4 + QR] 
+        B[Capa Búsqueda: Metadatos XMP Nivel 1]
+        C[Capa Datos: JSON Adjunto Nivel 2]
+    end
+    
+    subgraph "Sello Criptográfico PADES"
+        D{Firma Institucional root_ca.p12}
+    end
+    
+    A & B & C -->|Envuelto y Sellado Criptográficamente por| D
+    
+    style D fill:#2ecc71,stroke:#27ae60,stroke-width:4px,color:#fff
+```
+
+```text
+Estructura Binaria del Certificado PDF Firmado:
+┌─────────────────────────────────────────┐
+│ %PDF-1.7 (Cabecera)                     │
+├─────────────────────────────────────────┤
+│ Catalog (Catálogo Raíz del Documento)   │
+│  ├─ Pages (Capa Visual A4, QR)          │
+│  ├─ Metadata XMP (Nivel 1)              │ ◄── [ INYECCIÓN: Keywords y Hash ]
+│  └─ EmbeddedFiles (Nivel 2)             │
+│      └─ [ INYECCIÓN: expediente.json ]  │
+├─────────────────────────────────────────┤
+│ Diccionario de Firma (Nivel 3)          │ ◄── (Añadido por PADES)
+│  └─ [ Sello Criptográfico CMS/PKCS7 ]   │ ◄── (Garantiza la integridad total)
+├─────────────────────────────────────────┤
+│ %EOF (Fin de Archivo)                   │
+└─────────────────────────────────────────┘
+```
+
+El flujo de confianza funciona de la siguiente manera: Si alguien tiene la imagen certificada, extrae el texto oculto (`id` y `hash`). Con ese `id`, puede buscar el expediente en el sistema (o abrir el PDF asociado). Luego, extrae el JSON adjunto del PDF, recalcula su hash SHA-512 y lo compara con el `hash` oculto esteganográficamente en la imagen. Si ambos hashes son idénticos, significa que la imagen y el expediente están criptográficamente vinculados sin lugar a dudas.
 
 ---
 
@@ -342,7 +498,7 @@ cert.checkValidity(); // Lanzará excepción si expiró
 ### Alcance de la Validación del Certificado del Autor (PKCS#12)
 Durante la ejecución de la Fase 3, el sistema somete el archivo `.p12` proporcionado por el artista a ciertas validaciones técnicas antes de permitir la firma.
 
-**✅ Lo que SÍ se evalúa:**
+** Lo que SÍ se evalúa:**
 *   **El archivo es un PKCS#12 válido:** Se verifica que pueda ser parseado criptográficamente.
 *   **Contiene un certificado X.509:** Confirma que la estructura de clave pública y privada es conforme al estándar.
 *   **El certificado no está corrupto:** Se verifica la integridad del archivo y que la contraseña proporcionada sea correcta para desencriptarlo.
@@ -379,7 +535,7 @@ graph TD
 *   `org.thymeleaf:thymeleaf`: Procesamiento y renderizado del template HTML de la certificación.
 *   `org.bouncycastle`: Interviene nuevamente como el proveedor criptográfico por defecto de iText 7 para operaciones de firma.
 
-📍 **Fragmento de Ejecución (ProcesoCertificacionTest.java):**
+**Fragmento de Ejecución (ProcesoCertificacionTest.java):**
 ```java
 // ══════════════════════════════════════════════════════════════════════
 // FASE 4 — Emisión del Certificado
@@ -437,13 +593,79 @@ El PDF recibe 3 niveles de seguridad pesada:
 
 ## Arquitectura y Patrones de Diseño
 
-El sistema está construido siguiendo los principios de la **Arquitectura Hexagonal**. Esto desacopla completamente el dominio y las reglas de validación forense de los mecanismos externos.
+El diseño estructural del sistema se fundamenta rigurosamente en los principios de la **Arquitectura Hexagonal**, también conocida como patrón de *Puertos y Adaptadores* (Ports & Adapters). Este enfoque arquitectónico garantiza un desacoplamiento absoluto entre el núcleo de la aplicación —donde residen las reglas de negocio y las complejas validaciones forenses— y los mecanismos tecnológicos externos responsables de la infraestructura.
 
-### Patrones Utilizados:
-1.  **Patrón State:** Gobierna la transición estricta entre las Fases del proceso. Impide que se salten validaciones.
-2.  **Patrón Observer:** Gestiona la publicación de eventos (`EventoAnalisisIniciado`, `EventoFirmaRealizada`, etc.) permitiendo a módulos reaccionar sin acoplar el código central.
-3.  **Patrón Strategy:** Validaciones intercambiables.
-4.  **Patrón Adapter/Ports:** Define contratos (`Ports`) en el *Core* resueltos en *Infraestructura* (Ej. `EsteganografiaPort` -> `EsteganografiaPNGAdapter`).
+### 1. Arquitectura Hexagonal en el Certificador Forense
+El objetivo principal de esta arquitectura es proteger y aislar la lógica pericial frente a la obsolescencia o cambios tecnológicos. **Por esta estricta razón, todo el paquete `core` está escrito exclusivamente en Java Puro**, sin importar ninguna dependencia de librerías externas (como Spring, iText, Jackson, etc.).
+
+Dentro de este ecosistema puro (el Core), vas a encontrar dos tipos distintos de interfaces:
+1. **Interfaces Internas del Dominio:** Como `EstadoProceso` o `EventListener`. Estas interfaces y las clases que las implementan viven 100% dentro del Core, ya que solo manejan la lógica de negocio (Patrones State, Observer, etc.).
+2. **Puertos (Interfaces de Frontera):** Son interfaces abstractas que definen requerimientos funcionales que *obligatoriamente* necesitan contacto con el mundo exterior (ej. guardar un archivo en disco, generar un PDF). El Core dicta el contrato (el *qué* debe hacerse).
+
+Para materializar las acciones de los Puertos en el mundo real, entran en juego los Adaptadores:
+*   **Adaptadores (Infraestructura):** Implementaciones tecnológicas concretas de los puertos mencionados (el *cómo* se hace), ubicadas en la capa externa, utilizando herramientas de software específicas (como iText para PDFs o BouncyCastle para criptografía).
+
+**Diagrama de Arquitectura Hexagonal del Sistema:**
+```mermaid
+graph TD
+    subgraph "Infraestructura (Capa Externa)"
+        A["CLI Runner / Web Controller"]
+        E["GeneradorPDFAdapter (iText)"]
+        F["EsteganografiaPNGAdapter"]
+        G["FirmadorP12Adapter (java.security)"]
+    end
+    
+    subgraph "Core / Dominio (Capa Interna)"
+        C(("Servicios Core y Validaciones"))
+        B["Puerto de Entrada: Caso de Uso"]
+        D["Puertos de Salida: Interfaces Port"]
+        B --> C
+        C --> D
+    end
+
+    A -. Inyecta Datos .-> B
+    E -. Implementa .-> D
+    F -. Implementa .-> D
+    G -. Implementa .-> D
+    
+    style C fill:#3498db,stroke:#2980b9,stroke-width:2px,color:#fff
+```
+
+**Ejemplo Práctico en el Código:**
+
+1. **En el Core (Capa Interna):** Solo definimos *QUÉ* necesitamos hacer a través de un Puerto de Salida. El núcleo no sabe qué es un PNG o un JPEG.
+```java
+// src/main/java/ec/edu/uce/certificadorforense/core/ports/out/EsteganografiaPort.java
+public interface EsteganografiaPort {
+    byte[] inyectar(byte[] imagenOriginal, String jsonCertificacion);
+    String extraer(byte[] imagenCertificada);
+}
+```
+
+2. **En la Infraestructura (Capa Externa):** Definimos *CÓMO* se hace, inyectando la implementación técnica de esa interfaz.
+```java
+// src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/esteganografia/EsteganografiaPNGAdapter.java
+public class EsteganografiaPNGAdapter implements EsteganografiaPort {
+    @Override
+    public byte[] inyectar(byte[] imagenOriginal, String jsonCertificacion) {
+        // Lógica de inyección binaria específica para formato PNG (Chunk tEXt)
+    }
+}
+```
+*Ventaja clave:* Si en el futuro se quiere soportar esteganografía en imágenes TIFF, solo se debe crear un `EsteganografiaTIFFAdapter` sin tener que alterar ni una sola línea de la lógica de certificación forense central.
+
+### 2. Patrones de Diseño Utilizados
+<a name="patron-state"></a>
+#### 2.1 Patrón State (Máquina de Estados del Proceso)
+*   **¿Cómo funciona?** El flujo de certificación se comporta como una máquina de estados finitos que atraviesa 4 etapas secuenciales (`AnalisisForenseState` → `DatosObraState` → `FirmaAutorState` → `CertificacionState`). Cada estado encapsula la lógica para procesar, validar y transicionar a la siguiente fase, garantizando que ninguna validación forense o paso legal se omita. Todos los estados comparten un `ContextoProceso` que acumula los datos generados (hashes, expediente, etc.).
+*   **¿Dónde se encuentra?** En el paquete principal de la lógica de negocio: `src/main/java/ec/edu/uce/certificadorforense/core/state/`. Aquí residen la interfaz base (`EstadoProceso.java`), la entidad contenedora (`ContextoProceso.java`) y todas las clases concretas de cada fase.
+*   **¿Cómo se emplea?** El sistema cliente (como la consola o las pruebas) inicializa el `ContextoProceso` en el primer estado y simplemente ejecuta los métodos abstractos del estado actual: `ejecutar(contexto)` para la lógica principal, `validar(contexto)` para verificar la integridad, y finalmente `avanzar(contexto)` para que el patrón asigne automáticamente la siguiente clase de estado en el flujo, permitiendo avanzar sin el uso de condicionales masivos (`if/else`).
+
+#### 2.2 Patrón Observer
+Gestiona la publicación de eventos asíncronos (`EventoAnalisisIniciado`, `EventoFirmaRealizada`, etc.) permitiendo a distintos módulos reaccionar (como audit trails o logs) sin acoplarse al código de certificación central.
+
+#### 2.3 Patrón Strategy
+Se utiliza de forma extensiva en la `ValidadorGenericoService`, permitiendo que las reglas de validación forense sean intercambiables y aplicadas dinámicamente como una lista de estrategias sin alterar la clase contenedora.
 
 ---
 
@@ -499,7 +721,7 @@ En tu caso (sistema forense), NO existe acceso a una CA gubernamental real o int
 | **Dependencia** | Alta (Entidades externas pagas/públicas) | Ninguna (Autónomo) |
 
 ### Justificación Académica para la Tesis
-*En el presente sistema se implementa una Autoridad Certificadora raíz (ROOT CA) simulada, con el objetivo de establecer un punto de confianza dentro de una infraestructura de clave pública (PKI) cerrada.*
+*En el presente modulo se implementa una Autoridad Certificadora raíz (ROOT CA) simulada, con el objetivo de establecer un punto de confianza dentro de una infraestructura de clave pública (PKI) cerrada.*
 
 *En sistemas reales, la confianza en certificados digitales proviene de autoridades certificadoras raíz preinstaladas en sistemas operativos y navegadores, las cuales actúan como anclas de confianza global. Sin embargo, en entornos controlados o de investigación, no es posible ni necesario depender de infraestructuras externas.*
 

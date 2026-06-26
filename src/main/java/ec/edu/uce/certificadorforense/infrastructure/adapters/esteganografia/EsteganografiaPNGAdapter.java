@@ -15,7 +15,10 @@ import java.util.zip.CRC32;
  * píxeles ({@code IDAT}) ni la estructura visible de la imagen.
  * </p>
  *
- * <p>Formato del chunk PNG insertado:</p>
+ * <p>
+ * Formato del chunk PNG insertado:
+ * </p>
+ * 
  * <pre>
  * [4 bytes longitud datos] [4 bytes "tEXt"] [keyword\0value] [4 bytes CRC32]
  * </pre>
@@ -25,7 +28,7 @@ public class EsteganografiaPNGAdapter implements EsteganografiaPort {
     private static final byte[] PNG_SIGNATURE = {
             (byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A
     };
-    private static final byte[] CHUNK_IEND = {0x49, 0x45, 0x4E, 0x44};
+    private static final byte[] CHUNK_IEND = { 0x49, 0x45, 0x4E, 0x44 };
     private static final String KEYWORD = "verisart-cert";
 
     @Override
@@ -126,9 +129,9 @@ public class EsteganografiaPNGAdapter implements EsteganografiaPort {
     }
 
     private byte[] intToBytes(int valor) {
-        return new byte[]{
-            (byte) (valor >> 24), (byte) (valor >> 16),
-            (byte) (valor >> 8), (byte) valor
+        return new byte[] {
+                (byte) (valor >> 24), (byte) (valor >> 16),
+                (byte) (valor >> 8), (byte) valor
         };
     }
 }

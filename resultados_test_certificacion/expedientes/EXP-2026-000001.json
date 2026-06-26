@@ -1,6 +1,6 @@
 {
   "idExpediente": "EXP-2026-000001",
-  "fechaRegistro": "2026-06-25T03:04:19.489175325Z",
+  "fechaRegistro": "2026-06-25T19:44:43.459472164Z",
   "autor": {
     "nombres": "Artista",
     "apellidos": "Test",
@@ -14,7 +14,7 @@
     "software": "TestSoft",
     "hardware": "Tableta Gráfica Wacom",
     "categoria": "ILUSTRACION",
-    "fechaCreacion": "2026-06-24"
+    "fechaCreacion": "2026-06-25"
   },
   "analisis": {
     "resultado": "APROBADO",
