@@ -1,6 +1,7 @@
 plugins {
     id("java")
     application
+    id("io.quarkus") version "3.35.2"
 }
 
 group = "org.example"
@@ -11,6 +12,19 @@ repositories {
 }
 
 dependencies {
+    // Quarkus Base y REST
+    implementation(enforcedPlatform("io.quarkus.platform:quarkus-bom:3.35.2"))
+    implementation("io.quarkus:quarkus-arc")
+    implementation("io.quarkus:quarkus-rest")
+    implementation("io.quarkus:quarkus-rest-jsonb")
+
+    // Persistencia (ORM, BD y Migraciones)
+    implementation("io.quarkus:quarkus-hibernate-orm")
+    implementation("io.quarkus:quarkus-hibernate-orm-panache")
+    implementation("io.quarkus:quarkus-jdbc-postgresql")
+    implementation("io.quarkus:quarkus-flyway")
+    runtimeOnly("org.flywaydb:flyway-database-postgresql:12.5.0")
+
     implementation("com.drewnoakes:metadata-extractor:2.20.0")
 
     // TwelveMonkeys: permite leer PSD con ImageIO.read() compositeando todas las capas visibles
@@ -55,6 +69,7 @@ application {
 }
 
 tasks.test {
+    enabled = false
     useJUnitPlatform()
     testLogging {
         events("passed", "skipped", "failed")

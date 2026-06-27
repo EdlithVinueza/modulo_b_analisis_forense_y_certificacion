@@ -215,7 +215,7 @@ public class ProcesoCertificacionTest {
 
         Declaraciones declaraciones = Declaraciones.builder()
                 .titularDerechos(true)
-                .entiendeCertificacionTecnica(true)
+
                 .aceptaTerminos(true)
                 .build();
 

@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "86a3f3be75062580",
+        "id": "1c382ee0c6cde6e9",
         "type": "tabs",
         "children": [
           {
-            "id": "cf38b51103b11760",
+            "id": "1125baf22c093a0f",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -183,8 +183,9 @@
       "bases:Crear nueva base": false
     }
   },
-  "active": "cf38b51103b11760",
+  "active": "1125baf22c093a0f",
   "lastOpenFiles": [
+    "README.md",
     "resultados_test_certificacion/CERT-2026-000002-obra-certificada.png",
     "resultados_test_certificacion/CERT-2026-000001-obra-certificada.jpg",
     "build/classes/java/main/ec/edu/uce/certificadorforense/infrastructure/adapters/esteganografia/EsteganografiaPNGAdapter.class",
