@@ -7,6 +7,10 @@ import ec.edu.uce.certificadorforense.core.model.imagen.EstructuraImagen;
 
 import java.io.File;
 
+/**
+ * Procesador específico para archivos de imagen (PNG, JPEG).
+ * Extrae metadatos y estructura física utilizando servicios delegados.
+ */
 public class ArchivoImagenProcessor implements ArchivoProcessorPort<ArchivoImagen> {
 
     private final MetadatosImagenService metadatosService;

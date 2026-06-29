@@ -8,6 +8,10 @@ import ec.edu.uce.certificadorforense.core.model.psd.EstructuraCapaPSD;
 import java.io.File;
 import java.util.List;
 
+/**
+ * Procesador específico para archivos de Photoshop (PSD).
+ * Extrae metadatos y capas estructurales utilizando servicios delegados.
+ */
 public class ArchivoPSDProcessor implements ArchivoProcessorPort<ArchivoPSD> {
 
     private final MetadatosPSDService metadatosService;

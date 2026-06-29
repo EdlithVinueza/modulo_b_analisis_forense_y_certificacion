@@ -6,6 +6,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Entidad JPA que representa una Obra registrada en el sistema.
+ * Utiliza Panache (Active Record) para las operaciones de base de datos.
+ */
 @Entity
 @Table(name = "obras")
 public class ObraEntity extends PanacheEntityBase {
@@ -22,10 +26,13 @@ public class ObraEntity extends PanacheEntityBase {
 
     @Column(columnDefinition = "TEXT")
     public String descripcion;
+
     @Column(length = 50)
     public String categoria;
+
     @Column(length = 120)
     public String software;
+
     @Column(length = 120)
     public String hardware;
 

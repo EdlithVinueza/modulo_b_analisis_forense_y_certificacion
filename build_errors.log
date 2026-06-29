@@ -1,0 +1,1011 @@
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::load has been called by net.rubygrapefruit.platform.internal.NativeLibraryLoader in an unnamed module (file:/home/edlith/.gradle/wrapper/dists/gradle-9.3.0-bin/79n14ral3mx1ozqr3csh2u872/gradle-9.3.0/lib/native-platform-0.22-milestone-29.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+> Task :processResources UP-TO-DATE
+> Task :quarkusGenerateAppModel UP-TO-DATE
+> Task :quarkusGenerateCode UP-TO-DATE
+
+> Task :compileJava FAILED
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/rest/CertificacionResource.java:22: error: incompatible types: Path cannot be converted to Annotation
+@Path("/api/v1/certificaciones")
+ ^
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/rest/CertificacionResource.java:31: error: incompatible types: Path cannot be converted to Annotation
+    @Path("/init")
+     ^
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/rest/CertificacionResource.java:70: error: incompatible types: Path cannot be converted to Annotation
+    @Path("/{id}/datos")
+     ^
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/rest/CertificacionResource.java:97: error: incompatible types: Path cannot be converted to Annotation
+    @Path("/{id}/firmar")
+     ^
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/rest/CertificacionResource.java:123: error: incompatible types: Path cannot be converted to Annotation
+    @Path("/{id}/descargar")
+     ^
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/processors/MetadatosPSDService.java:14: error: cannot find symbol
+    private final List<MetadataExtractor<MetadatosPSD.MetadatosPSDBuilder>> extractors;
+                                                     ^
+  symbol:   class MetadatosPSDBuilder
+  location: class MetadatosPSD
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/processors/MetadatosImagenService.java:16: error: cannot find symbol
+    private final List<MetadataExtractor<MetadatosImagen.MetadatosImagenBuilder>> extractores;
+                                                        ^
+  symbol:   class MetadatosImagenBuilder
+  location: class MetadatosImagen
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/Xmp.java:10: error: cannot find symbol
+public class Xmp implements MetadataExtractor<MetadatosPSD.MetadatosPSDBuilder> {
+                                                          ^
+  symbol:   class MetadatosPSDBuilder
+  location: class MetadatosPSD
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/Xmp.java:18: error: cannot find symbol
+    public void extraer(Metadata metadata, MetadatosPSD.MetadatosPSDBuilder builder) {
+                                                       ^
+  symbol:   class MetadatosPSDBuilder
+  location: class MetadatosPSD
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/Iptc.java:8: error: cannot find symbol
+public class Iptc implements MetadataExtractor<MetadatosPSD.MetadatosPSDBuilder> {
+                                                           ^
+  symbol:   class MetadatosPSDBuilder
+  location: class MetadatosPSD
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/Iptc.java:11: error: cannot find symbol
+    public void extraer(Metadata metadata, MetadatosPSD.MetadatosPSDBuilder builder) {
+                                                       ^
+  symbol:   class MetadatosPSDBuilder
+  location: class MetadatosPSD
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/FileType.java:8: error: cannot find symbol
+public class FileType implements MetadataExtractor<MetadatosPSD.MetadatosPSDBuilder> {
+                                                               ^
+  symbol:   class MetadatosPSDBuilder
+  location: class MetadatosPSD
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/FileType.java:11: error: cannot find symbol
+    public void extraer(Metadata metadata, MetadatosPSD.MetadatosPSDBuilder builder) {
+                                                       ^
+  symbol:   class MetadatosPSDBuilder
+  location: class MetadatosPSD
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/Jfif.java:8: error: cannot find symbol
+public class Jfif implements MetadataExtractor<MetadatosPSD.MetadatosPSDBuilder> {
+                                                           ^
+  symbol:   class MetadatosPSDBuilder
+  location: class MetadatosPSD
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/Jfif.java:11: error: cannot find symbol
+    public void extraer(Metadata metadata, MetadatosPSD.MetadatosPSDBuilder builder) {
+                                                       ^
+  symbol:   class MetadatosPSDBuilder
+  location: class MetadatosPSD
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/Exif.java:9: error: cannot find symbol
+public class Exif implements MetadataExtractor<MetadatosPSD.MetadatosPSDBuilder> {
+                                                           ^
+  symbol:   class MetadatosPSDBuilder
+  location: class MetadatosPSD
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/Exif.java:12: error: cannot find symbol
+    public void extraer(Metadata metadata, MetadatosPSD.MetadatosPSDBuilder builder) {
+                                                       ^
+  symbol:   class MetadatosPSDBuilder
+  location: class MetadatosPSD
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/IccProfile.java:8: error: cannot find symbol
+public class IccProfile implements MetadataExtractor<MetadatosPSD.MetadatosPSDBuilder> {
+                                                                 ^
+  symbol:   class MetadatosPSDBuilder
+  location: class MetadatosPSD
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/IccProfile.java:11: error: cannot find symbol
+    public void extraer(Metadata metadata, MetadatosPSD.MetadatosPSDBuilder builder) {
+                                                       ^
+  symbol:   class MetadatosPSDBuilder
+  location: class MetadatosPSD
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/PsdHeader.java:8: error: cannot find symbol
+public class PsdHeader implements MetadataExtractor<MetadatosPSD.MetadatosPSDBuilder> {
+                                                                ^
+  symbol:   class MetadatosPSDBuilder
+  location: class MetadatosPSD
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/PsdHeader.java:11: error: cannot find symbol
+    public void extraer(Metadata metadata, MetadatosPSD.MetadatosPSDBuilder builder) {
+                                                       ^
+  symbol:   class MetadatosPSDBuilder
+  location: class MetadatosPSD
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/Photoshop.java:8: error: cannot find symbol
+public class Photoshop implements MetadataExtractor<MetadatosPSD.MetadatosPSDBuilder> {
+                                                                ^
+  symbol:   class MetadatosPSDBuilder
+  location: class MetadatosPSD
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/Photoshop.java:11: error: cannot find symbol
+    public void extraer(Metadata metadata, MetadatosPSD.MetadatosPSDBuilder builder) {
+                                                       ^
+  symbol:   class MetadatosPSDBuilder
+  location: class MetadatosPSD
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/imagen/Png.java:7: error: cannot find symbol
+public class Png implements MetadataExtractor<MetadatosImagen.MetadatosImagenBuilder> {
+                                                             ^
+  symbol:   class MetadatosImagenBuilder
+  location: class MetadatosImagen
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/imagen/Png.java:10: error: cannot find symbol
+    public void extraer(Metadata metadata, MetadatosImagen.MetadatosImagenBuilder builder) {
+                                                          ^
+  symbol:   class MetadatosImagenBuilder
+  location: class MetadatosImagen
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/imagen/Icc.java:7: error: cannot find symbol
+public class Icc implements MetadataExtractor<MetadatosImagen.MetadatosImagenBuilder> {
+                                                             ^
+  symbol:   class MetadatosImagenBuilder
+  location: class MetadatosImagen
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/imagen/Icc.java:9: error: cannot find symbol
+    public void extraer(Metadata metadata, MetadatosImagen.MetadatosImagenBuilder builder) {
+                                                          ^
+  symbol:   class MetadatosImagenBuilder
+  location: class MetadatosImagen
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/imagen/FileType.java:7: error: cannot find symbol
+public class FileType implements MetadataExtractor<MetadatosImagen.MetadatosImagenBuilder> {
+                                                                  ^
+  symbol:   class MetadatosImagenBuilder
+  location: class MetadatosImagen
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/imagen/FileType.java:9: error: cannot find symbol
+    public void extraer(Metadata metadata, MetadatosImagen.MetadatosImagenBuilder builder) {
+                                                          ^
+  symbol:   class MetadatosImagenBuilder
+  location: class MetadatosImagen
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/imagen/Jfif.java:8: error: cannot find symbol
+public class Jfif implements MetadataExtractor<MetadatosImagen.MetadatosImagenBuilder> {
+                                                              ^
+  symbol:   class MetadatosImagenBuilder
+  location: class MetadatosImagen
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/imagen/Jfif.java:10: error: cannot find symbol
+    public void extraer(Metadata metadata, MetadatosImagen.MetadatosImagenBuilder builder) {
+                                                          ^
+  symbol:   class MetadatosImagenBuilder
+  location: class MetadatosImagen
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/imagen/Exif.java:8: error: cannot find symbol
+public class Exif implements MetadataExtractor<MetadatosImagen.MetadatosImagenBuilder> {
+                                                              ^
+  symbol:   class MetadatosImagenBuilder
+  location: class MetadatosImagen
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/imagen/Exif.java:10: error: cannot find symbol
+    public void extraer(Metadata metadata, MetadatosImagen.MetadatosImagenBuilder builder) {
+                                                          ^
+  symbol:   class MetadatosImagenBuilder
+  location: class MetadatosImagen
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/imagen/Jpeg.java:7: error: cannot find symbol
+public class Jpeg implements MetadataExtractor<MetadatosImagen.MetadatosImagenBuilder> {
+                                                              ^
+  symbol:   class MetadatosImagenBuilder
+  location: class MetadatosImagen
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/imagen/Jpeg.java:9: error: cannot find symbol
+    public void extraer(Metadata metadata, MetadatosImagen.MetadatosImagenBuilder builder) {
+                                                          ^
+  symbol:   class MetadatosImagenBuilder
+  location: class MetadatosImagen
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/Main.java:84: error: cannot find symbol
+            System.out.println("• Capas binarias extraídas: " + psd.getCapas().size());
+                                                                   ^
+  symbol:   method getCapas()
+  location: variable psd of type ArchivoPSD
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/Main.java:85: error: cannot find symbol
+            psd.getCapas().stream().limit(5).forEach(c ->
+               ^
+  symbol:   method getCapas()
+  location: variable psd of type ArchivoPSD
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/Main.java:106: error: cannot find symbol
+            System.out.println(png.getEstructura());
+                                  ^
+  symbol:   method getEstructura()
+  location: variable png of type ArchivoImagen
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/Main.java:116: error: cannot find symbol
+        if (psd != null && png != null && !veredictoPSD.isEsRechazado() && !veredictoPNG.isEsRechazado()) {
+                                                       ^
+  symbol:   method isEsRechazado()
+  location: variable veredictoPSD of type VeredictoFinal
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/Main.java:116: error: cannot find symbol
+        if (psd != null && png != null && !veredictoPSD.isEsRechazado() && !veredictoPNG.isEsRechazado()) {
+                                                                                        ^
+  symbol:   method isEsRechazado()
+  location: variable veredictoPNG of type VeredictoFinal
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/Main.java:154: error: cannot find symbol
+            if (veredictoPSD != null && veredictoPSD.isEsRechazado()) {
+                                                    ^
+  symbol:   method isEsRechazado()
+  location: variable veredictoPSD of type VeredictoFinal
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/Main.java:155: error: cannot find symbol
+                System.err.println("  └─ PSD Rechazado por: " + veredictoPSD.getRazonRechazo());
+                                                                            ^
+  symbol:   method getRazonRechazo()
+  location: variable veredictoPSD of type VeredictoFinal
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/Main.java:157: error: cannot find symbol
+            if (veredictoPNG != null && veredictoPNG.isEsRechazado()) {
+                                                    ^
+  symbol:   method isEsRechazado()
+  location: variable veredictoPNG of type VeredictoFinal
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/Main.java:158: error: cannot find symbol
+                System.err.println("  └─ PNG Rechazada por: " + veredictoPNG.getRazonRechazo());
+                                                                            ^
+  symbol:   method getRazonRechazo()
+  location: variable veredictoPNG of type VeredictoFinal
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:138: error: cannot find symbol
+        contexto.setArchivoPSD(psd);
+                ^
+  symbol:   method setArchivoPSD(ArchivoPSD)
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:139: error: cannot find symbol
+        contexto.setArchivoImagen(imagen);
+                ^
+  symbol:   method setArchivoImagen(ArchivoImagen)
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:147: error: cannot find symbol
+        contexto.setVeredictoPSD(veredictoPSD);
+                ^
+  symbol:   method setVeredictoPSD(VeredictoFinal)
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:148: error: cannot find symbol
+        contexto.setVeredictoImagen(veredictoImagen);
+                ^
+  symbol:   method setVeredictoImagen(VeredictoFinal)
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:155: error: cannot find symbol
+            contexto.setPHash(pHash);
+                    ^
+  symbol:   method setPHash(String)
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:162: error: cannot find symbol
+        contexto.getEstadoActual().avanzar(contexto);
+                ^
+  symbol:   method getEstadoActual()
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:165: error: cannot find symbol
+                contexto.getSha512PSD(), contexto.getSha512Imagen(),
+                        ^
+  symbol:   method getSha512PSD()
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:165: error: cannot find symbol
+                contexto.getSha512PSD(), contexto.getSha512Imagen(),
+                                                 ^
+  symbol:   method getSha512Imagen()
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:166: error: cannot find symbol
+                contexto.getPHash(), contexto.getCapasPSD()));
+                        ^
+  symbol:   method getPHash()
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:166: error: cannot find symbol
+                contexto.getPHash(), contexto.getCapasPSD()));
+                                             ^
+  symbol:   method getCapasPSD()
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:173: error: cannot find symbol
+        Autor autor = Autor.builder()
+                           ^
+  symbol:   method builder()
+  location: class Autor
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:181: error: cannot find symbol
+        Obra obra = Obra.builder()
+                        ^
+  symbol:   method builder()
+  location: class Obra
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:189: error: cannot find symbol
+        Declaraciones declaraciones = Declaraciones.builder()
+                                                   ^
+  symbol:   method builder()
+  location: class Declaraciones
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:195: error: cannot find symbol
+        contexto.setAutor(autor);
+                ^
+  symbol:   method setAutor(Autor)
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:196: error: cannot find symbol
+        contexto.setObra(obra);
+                ^
+  symbol:   method setObra(Obra)
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:197: error: cannot find symbol
+        contexto.setDeclaraciones(declaraciones);
+                ^
+  symbol:   method setDeclaraciones(Declaraciones)
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:198: error: cannot find symbol
+        contexto.getEstadoActual().avanzar(contexto);
+                ^
+  symbol:   method getEstadoActual()
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:206: error: cannot find symbol
+        contexto.setExpediente(expediente);
+                ^
+  symbol:   method setExpediente(Expediente)
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:210: error: cannot find symbol
+        contexto.setExpedienteJson(expedienteJson);
+                ^
+  symbol:   method setExpedienteJson(String)
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:216: error: cannot find symbol
+        contexto.setFirmaAutor(firma);
+                ^
+  symbol:   method setFirmaAutor(FirmaAutor)
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:219: error: cannot find symbol
+        contexto.getEstadoActual().avanzar(contexto);
+                ^
+  symbol:   method getEstadoActual()
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:236: error: cannot find symbol
+        String expedienteFirmadoJson = expedienteJson + "\n---FIRMA---\n" + firma.getFirmaBase64();
+                                                                                 ^
+  symbol:   method getFirmaBase64()
+  location: variable firma of type FirmaAutor
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:238: error: cannot find symbol
+        contexto.setCertificado(certificado);
+                ^
+  symbol:   method setCertificado(Certificado)
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:243: error: cannot find symbol
+        contexto.setPdfCertificado(pdfFirmado);
+                ^
+  symbol:   method setPdfCertificado(byte[])
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:246: error: cannot find symbol
+        String jsonEstegano = "{\"id\":\"" + certificado.getIdCertificado()
+                                                        ^
+  symbol:   method getIdCertificado()
+  location: variable certificado of type Certificado
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:247: error: cannot find symbol
+                + "\",\"hash\":\"" + certificado.getHashExpedienteFirmado() + "\"}";
+                                                ^
+  symbol:   method getHashExpedienteFirmado()
+  location: variable certificado of type Certificado
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:252: error: cannot find symbol
+            contexto.setImagenCertificada(imagenCert);
+                    ^
+  symbol:   method setImagenCertificada(byte[])
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:261: error: cannot find symbol
+        String nombrePDF = certificado.getIdCertificado() + ".pdf";
+                                      ^
+  symbol:   method getIdCertificado()
+  location: variable certificado of type Certificado
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:274: error: cannot find symbol
+        System.out.println("║  PROCESO COMPLETADO — " + certificado.getIdCertificado() + "  ║");
+                                                                   ^
+  symbol:   method getIdCertificado()
+  location: variable certificado of type Certificado
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:80: error: cannot find symbol
+        contexto.setArchivoPSD(psd);
+                ^
+  symbol:   method setArchivoPSD(ArchivoPSD)
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:81: error: cannot find symbol
+        contexto.setArchivoImagen(imagen);
+                ^
+  symbol:   method setArchivoImagen(ArchivoImagen)
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:86: error: cannot find symbol
+        if (veredictoPSD.isEsRechazado()) throw new RuntimeException("Rechazo PSD: " + veredictoPSD.getRazonRechazo());
+                        ^
+  symbol:   method isEsRechazado()
+  location: variable veredictoPSD of type VeredictoFinal
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:86: error: cannot find symbol
+        if (veredictoPSD.isEsRechazado()) throw new RuntimeException("Rechazo PSD: " + veredictoPSD.getRazonRechazo());
+                                                                                                   ^
+  symbol:   method getRazonRechazo()
+  location: variable veredictoPSD of type VeredictoFinal
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:87: error: cannot find symbol
+        if (veredictoImagen.isEsRechazado()) throw new RuntimeException("Rechazo Imagen: " + veredictoImagen.getRazonRechazo());
+                           ^
+  symbol:   method isEsRechazado()
+  location: variable veredictoImagen of type VeredictoFinal
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:87: error: cannot find symbol
+        if (veredictoImagen.isEsRechazado()) throw new RuntimeException("Rechazo Imagen: " + veredictoImagen.getRazonRechazo());
+                                                                                                            ^
+  symbol:   method getRazonRechazo()
+  location: variable veredictoImagen of type VeredictoFinal
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:89: error: cannot find symbol
+        contexto.setVeredictoPSD(veredictoPSD);
+                ^
+  symbol:   method setVeredictoPSD(VeredictoFinal)
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:90: error: cannot find symbol
+        contexto.setVeredictoImagen(veredictoImagen);
+                ^
+  symbol:   method setVeredictoImagen(VeredictoFinal)
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:96: error: cannot find symbol
+        contexto.setPHash(pHashStr);
+                ^
+  symbol:   method setPHash(String)
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:103: error: cannot find symbol
+        contexto.setSha512PSD(hashPort.calcularSHA512(Files.readAllBytes(psdFile.toPath())));
+                ^
+  symbol:   method setSha512PSD(String)
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:104: error: cannot find symbol
+        contexto.setSha512Imagen(hashPort.calcularSHA512(Files.readAllBytes(imgFile.toPath())));
+                ^
+  symbol:   method setSha512Imagen(String)
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:106: error: cannot find symbol
+        contexto.getEstadoActual().avanzar(contexto); // Avanzar a DatosObraState
+                ^
+  symbol:   method getEstadoActual()
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:119: error: cannot find symbol
+        Autor autor = Autor.builder()
+                           ^
+  symbol:   method builder()
+  location: class Autor
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:133: error: cannot find symbol
+        Obra obra = Obra.builder()
+                        ^
+  symbol:   method builder()
+  location: class Obra
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:142: error: cannot find symbol
+        Declaraciones decl = Declaraciones.builder()
+                                          ^
+  symbol:   method builder()
+  location: class Declaraciones
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:147: error: cannot find symbol
+        contexto.setAutor(autor);
+                ^
+  symbol:   method setAutor(Autor)
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:148: error: cannot find symbol
+        contexto.setObra(obra);
+                ^
+  symbol:   method setObra(Obra)
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:149: error: cannot find symbol
+        contexto.setDeclaraciones(decl);
+                ^
+  symbol:   method setDeclaraciones(Declaraciones)
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:151: error: cannot find symbol
+        contexto.getEstadoActual().avanzar(contexto); // Avanza a FirmaAutorState
+                ^
+  symbol:   method getEstadoActual()
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:157: error: cannot find symbol
+        obraEntity.titulo = obra.getTitulo();
+                                ^
+  symbol:   method getTitulo()
+  location: variable obra of type Obra
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:158: error: cannot find symbol
+        obraEntity.descripcion = obra.getDescripcion();
+                                     ^
+  symbol:   method getDescripcion()
+  location: variable obra of type Obra
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:160: error: cannot find symbol
+        obraEntity.software = obra.getSoftware();
+                                  ^
+  symbol:   method getSoftware()
+  location: variable obra of type Obra
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:161: error: cannot find symbol
+        obraEntity.hardware = obra.getHardware();
+                                  ^
+  symbol:   method getHardware()
+  location: variable obra of type Obra
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:162: error: cannot find symbol
+        obraEntity.fechaCreacion = obra.getFechaCreacion();
+                                       ^
+  symbol:   method getFechaCreacion()
+  location: variable obra of type Obra
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:170: error: cannot find symbol
+        expDb.hashPsdOriginal = contexto.getSha512PSD();
+                                        ^
+  symbol:   method getSha512PSD()
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:171: error: cannot find symbol
+        expDb.hashImagenFinal = contexto.getSha512Imagen();
+                                        ^
+  symbol:   method getSha512Imagen()
+  location: variable contexto of type ContextoProceso
+/home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:195: error: cannot find symbol
+        contexto.setExpediente(expediente);
+                ^
+  symbol:   method setExpediente(Expediente)
+  location: variable contexto of type ContextoProceso
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+100 errors
+
+[Incubating] Problems report is available at: file:///home/edlith/Documentos/UCE%2026-26/TESIS/modulo_b_analisis_forense_y_certificacion/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':compileJava'.
+> Compilation failed; see the compiler output below.
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/rest/CertificacionResource.java:22: error: incompatible types: Path cannot be converted to Annotation
+  @Path("/api/v1/certificaciones")
+   ^
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/rest/CertificacionResource.java:31: error: incompatible types: Path cannot be converted to Annotation
+      @Path("/init")
+       ^
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/rest/CertificacionResource.java:70: error: incompatible types: Path cannot be converted to Annotation
+      @Path("/{id}/datos")
+       ^
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/rest/CertificacionResource.java:97: error: incompatible types: Path cannot be converted to Annotation
+      @Path("/{id}/firmar")
+       ^
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/rest/CertificacionResource.java:123: error: incompatible types: Path cannot be converted to Annotation
+      @Path("/{id}/descargar")
+       ^
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/processors/MetadatosPSDService.java:14: error: cannot find symbol
+      private final List<MetadataExtractor<MetadatosPSD.MetadatosPSDBuilder>> extractors;
+                                                       ^
+    symbol:   class MetadatosPSDBuilder
+    location: class MetadatosPSD
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/processors/MetadatosImagenService.java:16: error: cannot find symbol
+      private final List<MetadataExtractor<MetadatosImagen.MetadatosImagenBuilder>> extractores;
+                                                          ^
+    symbol:   class MetadatosImagenBuilder
+    location: class MetadatosImagen
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/Xmp.java:10: error: cannot find symbol
+  public class Xmp implements MetadataExtractor<MetadatosPSD.MetadatosPSDBuilder> {
+                                                            ^
+    symbol:   class MetadatosPSDBuilder
+    location: class MetadatosPSD
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/Xmp.java:18: error: cannot find symbol
+      public void extraer(Metadata metadata, MetadatosPSD.MetadatosPSDBuilder builder) {
+                                                         ^
+    symbol:   class MetadatosPSDBuilder
+    location: class MetadatosPSD
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/Iptc.java:8: error: cannot find symbol
+  public class Iptc implements MetadataExtractor<MetadatosPSD.MetadatosPSDBuilder> {
+                                                             ^
+    symbol:   class MetadatosPSDBuilder
+    location: class MetadatosPSD
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/Iptc.java:11: error: cannot find symbol
+      public void extraer(Metadata metadata, MetadatosPSD.MetadatosPSDBuilder builder) {
+                                                         ^
+    symbol:   class MetadatosPSDBuilder
+    location: class MetadatosPSD
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/FileType.java:8: error: cannot find symbol
+  public class FileType implements MetadataExtractor<MetadatosPSD.MetadatosPSDBuilder> {
+                                                                 ^
+    symbol:   class MetadatosPSDBuilder
+    location: class MetadatosPSD
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/FileType.java:11: error: cannot find symbol
+      public void extraer(Metadata metadata, MetadatosPSD.MetadatosPSDBuilder builder) {
+                                                         ^
+    symbol:   class MetadatosPSDBuilder
+    location: class MetadatosPSD
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/Jfif.java:8: error: cannot find symbol
+  public class Jfif implements MetadataExtractor<MetadatosPSD.MetadatosPSDBuilder> {
+                                                             ^
+    symbol:   class MetadatosPSDBuilder
+    location: class MetadatosPSD
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/Jfif.java:11: error: cannot find symbol
+      public void extraer(Metadata metadata, MetadatosPSD.MetadatosPSDBuilder builder) {
+                                                         ^
+    symbol:   class MetadatosPSDBuilder
+    location: class MetadatosPSD
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/Exif.java:9: error: cannot find symbol
+  public class Exif implements MetadataExtractor<MetadatosPSD.MetadatosPSDBuilder> {
+                                                             ^
+    symbol:   class MetadatosPSDBuilder
+    location: class MetadatosPSD
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/Exif.java:12: error: cannot find symbol
+      public void extraer(Metadata metadata, MetadatosPSD.MetadatosPSDBuilder builder) {
+                                                         ^
+    symbol:   class MetadatosPSDBuilder
+    location: class MetadatosPSD
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/IccProfile.java:8: error: cannot find symbol
+  public class IccProfile implements MetadataExtractor<MetadatosPSD.MetadatosPSDBuilder> {
+                                                                   ^
+    symbol:   class MetadatosPSDBuilder
+    location: class MetadatosPSD
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/IccProfile.java:11: error: cannot find symbol
+      public void extraer(Metadata metadata, MetadatosPSD.MetadatosPSDBuilder builder) {
+                                                         ^
+    symbol:   class MetadatosPSDBuilder
+    location: class MetadatosPSD
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/PsdHeader.java:8: error: cannot find symbol
+  public class PsdHeader implements MetadataExtractor<MetadatosPSD.MetadatosPSDBuilder> {
+                                                                  ^
+    symbol:   class MetadatosPSDBuilder
+    location: class MetadatosPSD
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/PsdHeader.java:11: error: cannot find symbol
+      public void extraer(Metadata metadata, MetadatosPSD.MetadatosPSDBuilder builder) {
+                                                         ^
+    symbol:   class MetadatosPSDBuilder
+    location: class MetadatosPSD
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/Photoshop.java:8: error: cannot find symbol
+  public class Photoshop implements MetadataExtractor<MetadatosPSD.MetadatosPSDBuilder> {
+                                                                  ^
+    symbol:   class MetadatosPSDBuilder
+    location: class MetadatosPSD
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/psd/Photoshop.java:11: error: cannot find symbol
+      public void extraer(Metadata metadata, MetadatosPSD.MetadatosPSDBuilder builder) {
+                                                         ^
+    symbol:   class MetadatosPSDBuilder
+    location: class MetadatosPSD
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/imagen/Png.java:7: error: cannot find symbol
+  public class Png implements MetadataExtractor<MetadatosImagen.MetadatosImagenBuilder> {
+                                                               ^
+    symbol:   class MetadatosImagenBuilder
+    location: class MetadatosImagen
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/imagen/Png.java:10: error: cannot find symbol
+      public void extraer(Metadata metadata, MetadatosImagen.MetadatosImagenBuilder builder) {
+                                                            ^
+    symbol:   class MetadatosImagenBuilder
+    location: class MetadatosImagen
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/imagen/Icc.java:7: error: cannot find symbol
+  public class Icc implements MetadataExtractor<MetadatosImagen.MetadatosImagenBuilder> {
+                                                               ^
+    symbol:   class MetadatosImagenBuilder
+    location: class MetadatosImagen
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/imagen/Icc.java:9: error: cannot find symbol
+      public void extraer(Metadata metadata, MetadatosImagen.MetadatosImagenBuilder builder) {
+                                                            ^
+    symbol:   class MetadatosImagenBuilder
+    location: class MetadatosImagen
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/imagen/FileType.java:7: error: cannot find symbol
+  public class FileType implements MetadataExtractor<MetadatosImagen.MetadatosImagenBuilder> {
+                                                                    ^
+    symbol:   class MetadatosImagenBuilder
+    location: class MetadatosImagen
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/imagen/FileType.java:9: error: cannot find symbol
+      public void extraer(Metadata metadata, MetadatosImagen.MetadatosImagenBuilder builder) {
+                                                            ^
+    symbol:   class MetadatosImagenBuilder
+    location: class MetadatosImagen
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/imagen/Jfif.java:8: error: cannot find symbol
+  public class Jfif implements MetadataExtractor<MetadatosImagen.MetadatosImagenBuilder> {
+                                                                ^
+    symbol:   class MetadatosImagenBuilder
+    location: class MetadatosImagen
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/imagen/Jfif.java:10: error: cannot find symbol
+      public void extraer(Metadata metadata, MetadatosImagen.MetadatosImagenBuilder builder) {
+                                                            ^
+    symbol:   class MetadatosImagenBuilder
+    location: class MetadatosImagen
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/imagen/Exif.java:8: error: cannot find symbol
+  public class Exif implements MetadataExtractor<MetadatosImagen.MetadatosImagenBuilder> {
+                                                                ^
+    symbol:   class MetadatosImagenBuilder
+    location: class MetadatosImagen
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/imagen/Exif.java:10: error: cannot find symbol
+      public void extraer(Metadata metadata, MetadatosImagen.MetadatosImagenBuilder builder) {
+                                                            ^
+    symbol:   class MetadatosImagenBuilder
+    location: class MetadatosImagen
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/imagen/Jpeg.java:7: error: cannot find symbol
+  public class Jpeg implements MetadataExtractor<MetadatosImagen.MetadatosImagenBuilder> {
+                                                                ^
+    symbol:   class MetadatosImagenBuilder
+    location: class MetadatosImagen
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/extractors/imagen/Jpeg.java:9: error: cannot find symbol
+      public void extraer(Metadata metadata, MetadatosImagen.MetadatosImagenBuilder builder) {
+                                                            ^
+    symbol:   class MetadatosImagenBuilder
+    location: class MetadatosImagen
+  Note: Recompile with -Xlint:unchecked for details.
+  Note: Some input files use unchecked or unsafe operations.
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/Main.java:84: error: cannot find symbol
+              System.out.println("• Capas binarias extraídas: " + psd.getCapas().size());
+                                                                     ^
+    symbol:   method getCapas()
+    location: variable psd of type ArchivoPSD
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/Main.java:85: error: cannot find symbol
+              psd.getCapas().stream().limit(5).forEach(c ->
+                 ^
+    symbol:   method getCapas()
+    location: variable psd of type ArchivoPSD
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/Main.java:106: error: cannot find symbol
+              System.out.println(png.getEstructura());
+                                    ^
+    symbol:   method getEstructura()
+    location: variable png of type ArchivoImagen
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/Main.java:116: error: cannot find symbol
+          if (psd != null && png != null && !veredictoPSD.isEsRechazado() && !veredictoPNG.isEsRechazado()) {
+                                                         ^
+    symbol:   method isEsRechazado()
+    location: variable veredictoPSD of type VeredictoFinal
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/Main.java:116: error: cannot find symbol
+          if (psd != null && png != null && !veredictoPSD.isEsRechazado() && !veredictoPNG.isEsRechazado()) {
+                                                                                          ^
+    symbol:   method isEsRechazado()
+    location: variable veredictoPNG of type VeredictoFinal
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/Main.java:154: error: cannot find symbol
+              if (veredictoPSD != null && veredictoPSD.isEsRechazado()) {
+                                                      ^
+    symbol:   method isEsRechazado()
+    location: variable veredictoPSD of type VeredictoFinal
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/Main.java:155: error: cannot find symbol
+                  System.err.println("  └─ PSD Rechazado por: " + veredictoPSD.getRazonRechazo());
+                                                                              ^
+    symbol:   method getRazonRechazo()
+    location: variable veredictoPSD of type VeredictoFinal
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/Main.java:157: error: cannot find symbol
+              if (veredictoPNG != null && veredictoPNG.isEsRechazado()) {
+                                                      ^
+    symbol:   method isEsRechazado()
+    location: variable veredictoPNG of type VeredictoFinal
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/Main.java:158: error: cannot find symbol
+                  System.err.println("  └─ PNG Rechazada por: " + veredictoPNG.getRazonRechazo());
+                                                                              ^
+    symbol:   method getRazonRechazo()
+    location: variable veredictoPNG of type VeredictoFinal
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:138: error: cannot find symbol
+          contexto.setArchivoPSD(psd);
+                  ^
+    symbol:   method setArchivoPSD(ArchivoPSD)
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:139: error: cannot find symbol
+          contexto.setArchivoImagen(imagen);
+                  ^
+    symbol:   method setArchivoImagen(ArchivoImagen)
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:147: error: cannot find symbol
+          contexto.setVeredictoPSD(veredictoPSD);
+                  ^
+    symbol:   method setVeredictoPSD(VeredictoFinal)
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:148: error: cannot find symbol
+          contexto.setVeredictoImagen(veredictoImagen);
+                  ^
+    symbol:   method setVeredictoImagen(VeredictoFinal)
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:155: error: cannot find symbol
+              contexto.setPHash(pHash);
+                      ^
+    symbol:   method setPHash(String)
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:162: error: cannot find symbol
+          contexto.getEstadoActual().avanzar(contexto);
+                  ^
+    symbol:   method getEstadoActual()
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:165: error: cannot find symbol
+                  contexto.getSha512PSD(), contexto.getSha512Imagen(),
+                          ^
+    symbol:   method getSha512PSD()
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:165: error: cannot find symbol
+                  contexto.getSha512PSD(), contexto.getSha512Imagen(),
+                                                   ^
+    symbol:   method getSha512Imagen()
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:166: error: cannot find symbol
+                  contexto.getPHash(), contexto.getCapasPSD()));
+                          ^
+    symbol:   method getPHash()
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:166: error: cannot find symbol
+                  contexto.getPHash(), contexto.getCapasPSD()));
+                                               ^
+    symbol:   method getCapasPSD()
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:173: error: cannot find symbol
+          Autor autor = Autor.builder()
+                             ^
+    symbol:   method builder()
+    location: class Autor
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:181: error: cannot find symbol
+          Obra obra = Obra.builder()
+                          ^
+    symbol:   method builder()
+    location: class Obra
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:189: error: cannot find symbol
+          Declaraciones declaraciones = Declaraciones.builder()
+                                                     ^
+    symbol:   method builder()
+    location: class Declaraciones
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:195: error: cannot find symbol
+          contexto.setAutor(autor);
+                  ^
+    symbol:   method setAutor(Autor)
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:196: error: cannot find symbol
+          contexto.setObra(obra);
+                  ^
+    symbol:   method setObra(Obra)
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:197: error: cannot find symbol
+          contexto.setDeclaraciones(declaraciones);
+                  ^
+    symbol:   method setDeclaraciones(Declaraciones)
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:198: error: cannot find symbol
+          contexto.getEstadoActual().avanzar(contexto);
+                  ^
+    symbol:   method getEstadoActual()
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:206: error: cannot find symbol
+          contexto.setExpediente(expediente);
+                  ^
+    symbol:   method setExpediente(Expediente)
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:210: error: cannot find symbol
+          contexto.setExpedienteJson(expedienteJson);
+                  ^
+    symbol:   method setExpedienteJson(String)
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:216: error: cannot find symbol
+          contexto.setFirmaAutor(firma);
+                  ^
+    symbol:   method setFirmaAutor(FirmaAutor)
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:219: error: cannot find symbol
+          contexto.getEstadoActual().avanzar(contexto);
+                  ^
+    symbol:   method getEstadoActual()
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:236: error: cannot find symbol
+          String expedienteFirmadoJson = expedienteJson + "\n---FIRMA---\n" + firma.getFirmaBase64();
+                                                                                   ^
+    symbol:   method getFirmaBase64()
+    location: variable firma of type FirmaAutor
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:238: error: cannot find symbol
+          contexto.setCertificado(certificado);
+                  ^
+    symbol:   method setCertificado(Certificado)
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:243: error: cannot find symbol
+          contexto.setPdfCertificado(pdfFirmado);
+                  ^
+    symbol:   method setPdfCertificado(byte[])
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:246: error: cannot find symbol
+          String jsonEstegano = "{\"id\":\"" + certificado.getIdCertificado()
+                                                          ^
+    symbol:   method getIdCertificado()
+    location: variable certificado of type Certificado
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:247: error: cannot find symbol
+                  + "\",\"hash\":\"" + certificado.getHashExpedienteFirmado() + "\"}";
+                                                  ^
+    symbol:   method getHashExpedienteFirmado()
+    location: variable certificado of type Certificado
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:252: error: cannot find symbol
+              contexto.setImagenCertificada(imagenCert);
+                      ^
+    symbol:   method setImagenCertificada(byte[])
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:261: error: cannot find symbol
+          String nombrePDF = certificado.getIdCertificado() + ".pdf";
+                                        ^
+    symbol:   method getIdCertificado()
+    location: variable certificado of type Certificado
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/entrypoint/cli/ProcesoCertificacionRunner.java:274: error: cannot find symbol
+          System.out.println("║  PROCESO COMPLETADO — " + certificado.getIdCertificado() + "  ║");
+                                                                     ^
+    symbol:   method getIdCertificado()
+    location: variable certificado of type Certificado
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:80: error: cannot find symbol
+          contexto.setArchivoPSD(psd);
+                  ^
+    symbol:   method setArchivoPSD(ArchivoPSD)
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:81: error: cannot find symbol
+          contexto.setArchivoImagen(imagen);
+                  ^
+    symbol:   method setArchivoImagen(ArchivoImagen)
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:86: error: cannot find symbol
+          if (veredictoPSD.isEsRechazado()) throw new RuntimeException("Rechazo PSD: " + veredictoPSD.getRazonRechazo());
+                          ^
+    symbol:   method isEsRechazado()
+    location: variable veredictoPSD of type VeredictoFinal
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:86: error: cannot find symbol
+          if (veredictoPSD.isEsRechazado()) throw new RuntimeException("Rechazo PSD: " + veredictoPSD.getRazonRechazo());
+                                                                                                     ^
+    symbol:   method getRazonRechazo()
+    location: variable veredictoPSD of type VeredictoFinal
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:87: error: cannot find symbol
+          if (veredictoImagen.isEsRechazado()) throw new RuntimeException("Rechazo Imagen: " + veredictoImagen.getRazonRechazo());
+                             ^
+    symbol:   method isEsRechazado()
+    location: variable veredictoImagen of type VeredictoFinal
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:87: error: cannot find symbol
+          if (veredictoImagen.isEsRechazado()) throw new RuntimeException("Rechazo Imagen: " + veredictoImagen.getRazonRechazo());
+                                                                                                              ^
+    symbol:   method getRazonRechazo()
+    location: variable veredictoImagen of type VeredictoFinal
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:89: error: cannot find symbol
+          contexto.setVeredictoPSD(veredictoPSD);
+                  ^
+    symbol:   method setVeredictoPSD(VeredictoFinal)
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:90: error: cannot find symbol
+          contexto.setVeredictoImagen(veredictoImagen);
+                  ^
+    symbol:   method setVeredictoImagen(VeredictoFinal)
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:96: error: cannot find symbol
+          contexto.setPHash(pHashStr);
+                  ^
+    symbol:   method setPHash(String)
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:103: error: cannot find symbol
+          contexto.setSha512PSD(hashPort.calcularSHA512(Files.readAllBytes(psdFile.toPath())));
+                  ^
+    symbol:   method setSha512PSD(String)
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:104: error: cannot find symbol
+          contexto.setSha512Imagen(hashPort.calcularSHA512(Files.readAllBytes(imgFile.toPath())));
+                  ^
+    symbol:   method setSha512Imagen(String)
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:106: error: cannot find symbol
+          contexto.getEstadoActual().avanzar(contexto); // Avanzar a DatosObraState
+                  ^
+    symbol:   method getEstadoActual()
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:119: error: cannot find symbol
+          Autor autor = Autor.builder()
+                             ^
+    symbol:   method builder()
+    location: class Autor
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:133: error: cannot find symbol
+          Obra obra = Obra.builder()
+                          ^
+    symbol:   method builder()
+    location: class Obra
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:142: error: cannot find symbol
+          Declaraciones decl = Declaraciones.builder()
+                                            ^
+    symbol:   method builder()
+    location: class Declaraciones
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:147: error: cannot find symbol
+          contexto.setAutor(autor);
+                  ^
+    symbol:   method setAutor(Autor)
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:148: error: cannot find symbol
+          contexto.setObra(obra);
+                  ^
+    symbol:   method setObra(Obra)
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:149: error: cannot find symbol
+          contexto.setDeclaraciones(decl);
+                  ^
+    symbol:   method setDeclaraciones(Declaraciones)
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:151: error: cannot find symbol
+          contexto.getEstadoActual().avanzar(contexto); // Avanza a FirmaAutorState
+                  ^
+    symbol:   method getEstadoActual()
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:157: error: cannot find symbol
+          obraEntity.titulo = obra.getTitulo();
+                                  ^
+    symbol:   method getTitulo()
+    location: variable obra of type Obra
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:158: error: cannot find symbol
+          obraEntity.descripcion = obra.getDescripcion();
+                                       ^
+    symbol:   method getDescripcion()
+    location: variable obra of type Obra
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:160: error: cannot find symbol
+          obraEntity.software = obra.getSoftware();
+                                    ^
+    symbol:   method getSoftware()
+    location: variable obra of type Obra
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:161: error: cannot find symbol
+          obraEntity.hardware = obra.getHardware();
+                                    ^
+    symbol:   method getHardware()
+    location: variable obra of type Obra
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:162: error: cannot find symbol
+          obraEntity.fechaCreacion = obra.getFechaCreacion();
+                                         ^
+    symbol:   method getFechaCreacion()
+    location: variable obra of type Obra
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:170: error: cannot find symbol
+          expDb.hashPsdOriginal = contexto.getSha512PSD();
+                                          ^
+    symbol:   method getSha512PSD()
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:171: error: cannot find symbol
+          expDb.hashImagenFinal = contexto.getSha512Imagen();
+                                          ^
+    symbol:   method getSha512Imagen()
+    location: variable contexto of type ContextoProceso
+  /home/edlith/Documentos/UCE 26-26/TESIS/modulo_b_analisis_forense_y_certificacion/src/main/java/ec/edu/uce/certificadorforense/application/service/CertificacionOrchestrator.java:195: error: cannot find symbol
+          contexto.setExpediente(expediente);
+                  ^
+    symbol:   method setExpediente(Expediente)
+    location: variable contexto of type ContextoProceso
+  100 errors
+
+* Try:
+> Check your code and dependencies to fix the compilation error(s)
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+
+BUILD FAILED in 6s
+4 actionable tasks: 1 executed, 3 up-to-date

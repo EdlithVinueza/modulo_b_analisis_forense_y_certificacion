@@ -4,6 +4,11 @@ import ec.edu.uce.certificadorforense.core.rules.IReglaValidacion;
 import ec.edu.uce.certificadorforense.core.model.imagen.ArchivoImagen;
 import ec.edu.uce.certificadorforense.core.model.validacion.ResultadoValidacion;
 
+/**
+ * Regla de validación que analiza la densidad de píxeles (DPI) y los perfiles de color (Gamma, sRGB)
+ * para detectar recortes de pantalla, imágenes descargadas de internet y validarlas frente
+ * a exportaciones de software profesional.
+ */
 public class ReglaAnalisisOrigen implements IReglaValidacion<ArchivoImagen> {
     @Override
     public ResultadoValidacion validar(ArchivoImagen img) {
