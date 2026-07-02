@@ -59,7 +59,7 @@ public class CertificacionResource {
             response.put("expediente_id", expedienteId);
             response.put("estado", "ANALIZADO");
             
-            return Response.status(Response.Status.CREATED).entity(response).build();
+            return Response.ok(response).build();
         } catch (Exception e) {
             return errorResponse(e.getMessage());
         }

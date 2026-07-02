@@ -46,7 +46,7 @@ public class FirmadorP12Adapter implements FirmadorExpedientePort {
             // 5. La fecha actual está dentro de la vigencia
             cert.checkValidity();
 
-            System.out.println("[FirmadorP12Adapter] ✅ Validación de certificado exitosa: " + cert.getSubjectX500Principal().getName());
+            System.out.println("[FirmadorP12Adapter] Validación de certificado exitosa: " + cert.getSubjectX500Principal().getName());
 
         } catch (FirmaException e) {
             throw e;

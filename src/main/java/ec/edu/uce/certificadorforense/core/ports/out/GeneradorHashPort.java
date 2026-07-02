@@ -20,4 +20,12 @@ public interface GeneradorHashPort {
      * @return Hash en formato hexadecimal lowercase (128 caracteres).
      */
     String calcularSHA512(String texto);
+
+    /**
+     * Calcula el hash SHA-512 leyendo un archivo por bloques para no saturar memoria.
+     *
+     * @param archivo Archivo a hashear.
+     * @return Hash en formato hexadecimal lowercase.
+     */
+    String calcularSHA512(java.io.File archivo) throws java.io.IOException;
 }

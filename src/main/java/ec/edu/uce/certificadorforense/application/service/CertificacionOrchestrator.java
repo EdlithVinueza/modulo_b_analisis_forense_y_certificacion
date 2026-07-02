@@ -40,19 +40,33 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import java.util.concurrent.CompletableFuture;
 
 @ApplicationScoped
 public class CertificacionOrchestrator {
 
     // Caché en memoria para las peticiones stateless del Frontend
     private final Map<String, ContextoProceso> contextoCache = new ConcurrentHashMap<>();
+    
+    public static class JobStatus {
+        public String estado;
+        public String mensajeError;
+        public JobStatus(String estado, String mensajeError) {
+            this.estado = estado;
+            this.mensajeError = mensajeError;
+        }
+    }
+    private final Map<String, JobStatus> jobStatusCache = new ConcurrentHashMap<>();
+
+    public JobStatus getJobStatus(String idExpediente) {
+        return jobStatusCache.get(idExpediente);
+    }
 
     private final String RUTA_ROOT_CA = "/home/edlith/Documentos/UCE 26-26/TESIS/CLAVES LINUX/sistema_certificado/sistema.p12";
     private final String PASS_CA = "ClaveSistema2026!";
 
     public String iniciarAnalisisFase1(File psdFile, File imgFile, String extension) throws Exception {
         GeneradorHashPort hashPort = new SHA512Adapter();
-        HashSHA512Service hashService = new HashSHA512Service(hashPort);
 
         List<ArchivoProcessorPort<? extends ArchivoBase>> procesadores = Arrays.asList(
                 new ArchivoImagenProcessor(),
@@ -74,41 +88,49 @@ public class CertificacionOrchestrator {
 
         ContextoProceso contexto = new ContextoProceso(new AnalisisForenseState());
 
-        ArchivoPSD psd = ((ArchivoProcessorPort<ArchivoPSD>) factory.getProcessor(psdFile)).procesar(psdFile);
-        ArchivoImagen imagen = ((ArchivoProcessorPort<ArchivoImagen>) factory.getProcessor(imgFile)).procesar(imgFile);
+        String expedienteId = "EXP-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
 
-        contexto.setArchivoPSD(psd);
-        contexto.setArchivoImagen(imagen);
+        try {
+            ArchivoPSD psd = ((ArchivoProcessorPort<ArchivoPSD>) factory.getProcessor(psdFile)).procesar(psdFile);
+            ArchivoImagen imagen = ((ArchivoProcessorPort<ArchivoImagen>) factory.getProcessor(imgFile)).procesar(imgFile);
 
-        VeredictoFinal veredictoPSD = validadorPSD.validar(psd);
-        VeredictoFinal veredictoImagen = validadorImagen.validar(imagen);
+            contexto.setArchivoPSD(psd);
+            contexto.setArchivoImagen(imagen);
 
-        if (veredictoPSD.isEsRechazado()) throw new RuntimeException("Rechazo PSD: " + veredictoPSD.getRazonRechazo());
-        if (veredictoImagen.isEsRechazado()) throw new RuntimeException("Rechazo Imagen: " + veredictoImagen.getRazonRechazo());
+            VeredictoFinal veredictoPSD = validadorPSD.validar(psd);
+            VeredictoFinal veredictoImagen = validadorImagen.validar(imagen);
 
-        contexto.setVeredictoPSD(veredictoPSD);
-        contexto.setVeredictoImagen(veredictoImagen);
+            if (veredictoPSD.isEsRechazado()) throw new RuntimeException("Rechazo PSD: " + veredictoPSD.getRazonRechazo());
+            if (veredictoImagen.isEsRechazado()) throw new RuntimeException("Rechazo Imagen: " + veredictoImagen.getRazonRechazo());
 
-        // pHash
-        BufferedImage imgPSD = ImageLoader.loadWithSubsampling(psdFile);
-        BufferedImage imgImagen = ImageLoader.loadWithSubsampling(imgFile);
-        String pHashStr = calcPHash.generarHash(imgImagen);
-        contexto.setPHash(pHashStr);
+            contexto.setVeredictoPSD(veredictoPSD);
+            contexto.setVeredictoImagen(veredictoImagen);
 
-        double similitud = calcPHash.compararSimilitud(calcPHash.generarHash(imgPSD), pHashStr);
-        if (similitud < 95.0) {
-            throw new RuntimeException("La similitud visual no es suficiente (" + similitud + "%).");
+            // pHash
+            BufferedImage imgPSD = ImageLoader.loadWithSubsampling(psdFile);
+            BufferedImage imgImagen = ImageLoader.loadWithSubsampling(imgFile);
+            String pHashStr = calcPHash.generarHash(imgImagen);
+            contexto.setPHash(pHashStr);
+
+            double similitud = calcPHash.compararSimilitud(calcPHash.generarHash(imgPSD), pHashStr);
+            // Umbral a 90% para compensar las ligeras diferencias generadas por compresión
+            if (similitud < 90.0) {
+                throw new RuntimeException("Rechazo Imagen: La similitud visual pHash no es suficiente (" + String.format("%.2f", similitud) + "%). El PSD y la imagen no coinciden visualmente.");
+            }
+
+            contexto.setSha512PSD(hashPort.calcularSHA512(psdFile));
+            contexto.setSha512Imagen(hashPort.calcularSHA512(imgFile));
+
+            contexto.getEstadoActual().avanzar(contexto);
+
+            contextoCache.put(expedienteId, contexto);
+
+            return expedienteId;
+        } finally {
+            // Borrar archivos temporales de fase 1
+            try { Files.deleteIfExists(psdFile.toPath()); } catch (Exception ignored) {}
+            try { Files.deleteIfExists(imgFile.toPath()); } catch (Exception ignored) {}
         }
-
-        contexto.setSha512PSD(hashPort.calcularSHA512(Files.readAllBytes(psdFile.toPath())));
-        contexto.setSha512Imagen(hashPort.calcularSHA512(Files.readAllBytes(imgFile.toPath())));
-
-        contexto.getEstadoActual().avanzar(contexto); // Avanzar a DatosObraState
-
-        String expedienteId = UUID.randomUUID().toString();
-        contextoCache.put(expedienteId, contexto);
-
-        return expedienteId;
     }
 
     @Transactional
@@ -130,13 +152,18 @@ public class CertificacionOrchestrator {
             if (c.name().equalsIgnoreCase(categoriaStr)) cat = c;
         }
 
+        String fechaCreacionStr = (String) body.get("fecha_creacion");
+        LocalDate fechaCreacion = fechaCreacionStr != null && !fechaCreacionStr.isEmpty() 
+            ? LocalDate.parse(fechaCreacionStr) 
+            : LocalDate.now();
+
         Obra obra = Obra.builder()
                 .titulo((String) body.get("titulo_obra"))
                 .descripcion((String) body.get("descripcion"))
                 .software((String) body.get("software"))
                 .hardware((String) body.get("hardware"))
                 .categoria(cat)
-                .fechaCreacion(LocalDate.now())
+                .fechaCreacion(fechaCreacion)
                 .build();
 
         Declaraciones decl = Declaraciones.builder()

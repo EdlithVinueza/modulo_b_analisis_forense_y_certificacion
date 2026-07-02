@@ -9,13 +9,24 @@ public class CalculadorPHash {
         if (imagen == null) {
             return "0".repeat(64);
         }
-        // 1. Redimensionar a 8x8 para normalizar
-        Image escala = imagen.getScaledInstance(8, 8, Image.SCALE_SMOOTH);
+
+        // 1. Quitar transparencia (Canal Alpha) pintando sobre un lienzo blanco ANTES de escalar.
+        // Si escalamos primero, los píxeles transparentes (usualmente rgba(0,0,0,0)) promedian
+        // sus colores negros con los píxeles adyacentes, oscureciendo la miniatura.
+        BufferedImage sinTransparencia = new BufferedImage(imagen.getWidth(), imagen.getHeight(), BufferedImage.TYPE_INT_RGB);
+        Graphics2D g1 = sinTransparencia.createGraphics();
+        g1.setColor(Color.WHITE);
+        g1.fillRect(0, 0, sinTransparencia.getWidth(), sinTransparencia.getHeight());
+        g1.drawImage(imagen, 0, 0, null);
+        g1.dispose();
+
+        // 2. Redimensionar a 8x8 para normalizar
+        Image escala = sinTransparencia.getScaledInstance(8, 8, Image.SCALE_SMOOTH);
         BufferedImage miniatura = new BufferedImage(8, 8, BufferedImage.TYPE_BYTE_GRAY);
 
-        Graphics g = miniatura.getGraphics();
-        g.drawImage(escala, 0, 0, null);
-        g.dispose();
+        Graphics2D g2 = miniatura.createGraphics();
+        g2.drawImage(escala, 0, 0, null);
+        g2.dispose();
 
         // 2. Calcular brillo promedio
         double sumaGris = 0;
