@@ -45,6 +45,10 @@ import java.util.concurrent.CompletableFuture;
 @ApplicationScoped
 public class CertificacionOrchestrator {
 
+    @jakarta.inject.Inject
+    HistorialHelperService historialHelper;
+
+
     // Caché en memoria para las peticiones stateless del Frontend
     private final Map<String, ContextoProceso> contextoCache = new ConcurrentHashMap<>();
     
@@ -88,7 +92,7 @@ public class CertificacionOrchestrator {
 
         ContextoProceso contexto = new ContextoProceso(new AnalisisForenseState());
 
-        String expedienteId = "EXP-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        String expedienteId = UUID.randomUUID().toString();
 
         try {
             ArchivoPSD psd = ((ArchivoProcessorPort<ArchivoPSD>) factory.getProcessor(psdFile)).procesar(psdFile);
@@ -96,6 +100,7 @@ public class CertificacionOrchestrator {
 
             contexto.setArchivoPSD(psd);
             contexto.setArchivoImagen(imagen);
+            contexto.setImagenRaw(Files.readAllBytes(imgFile.toPath())); // Guardar en RAM para evitar que /tmp lo borre
 
             VeredictoFinal veredictoPSD = validadorPSD.validar(psd);
             VeredictoFinal veredictoImagen = validadorImagen.validar(imagen);
@@ -175,41 +180,92 @@ public class CertificacionOrchestrator {
         contexto.setObra(obra);
         contexto.setDeclaraciones(decl);
         
-        contexto.getEstadoActual().avanzar(contexto); // Avanza a FirmaAutorState
+        // Solo avanzamos el estado de la máquina si venimos de Análisis Forense
+        if (contexto.getEstadoActual() instanceof ec.edu.uce.certificadorforense.core.state.DatosObraState) {
+            contexto.getEstadoActual().avanzar(contexto); // Avanza a FirmaAutorState
+        }
 
-        // PERSISTENCIA EN DB
-        ObraEntity obraEntity = new ObraEntity();
-        obraEntity.id = UUID.randomUUID();
-        obraEntity.usuario = usuarioDb;
-        obraEntity.titulo = obra.getTitulo();
-        obraEntity.descripcion = obra.getDescripcion();
-        obraEntity.categoria = cat.name();
-        obraEntity.software = obra.getSoftware();
-        obraEntity.hardware = obra.getHardware();
-        obraEntity.fechaCreacion = obra.getFechaCreacion();
-        obraEntity.fechaRegistro = LocalDateTime.now();
-        obraEntity.estadoActual = "ESPERANDO_FIRMA";
-        obraEntity.persist();
+        // PERSISTENCIA EN DB (Soporte para rectificación)
+        ExpedienteForenseEntity expDb = ExpedienteForenseEntity.findById(UUID.fromString(idExpediente));
+        
+        if (expDb == null) {
+            // Verificar si el archivo ya fue subido en otro intento (hash duplicado)
+            ExpedienteForenseEntity expAnterior = ExpedienteForenseEntity.find("hashPsdOriginal", contexto.getSha512PSD()).firstResult();
+            
+            if (expAnterior != null) {
+                if ("CERTIFICADO".equals(expAnterior.obra.estadoActual) || "FINALIZADO".equals(expAnterior.obra.estadoActual)) {
+                    String mensajeError;
+                    if (expAnterior.obra.usuario.id.equals(usuarioDb.id)) {
+                        mensajeError = "El archivo PSD original ya se encuentra certificado en el sistema. No puedes certificar la misma obra dos veces.";
+                    } else {
+                        mensajeError = "ALERTA DE SEGURIDAD: Esta obra ya se encuentra certificada y pertenece a otro autor.";
+                        // Registrar en el historial en una transacción independiente para que no se deshaga al lanzar la excepción
+                        historialHelper.registrarAlerta(expAnterior.obra, usuarioDb.cedula, usuarioDb.nombres, usuarioDb.apellidos);
+                    }
+                    throw new RuntimeException(mensajeError);
+                } else {
+                    // Es un borrador huérfano (el usuario regresó al Paso 1 y subió el mismo archivo)
+                    // Eliminamos el borrador anterior para permitir este nuevo intento.
+                    HistorialEstadoEntity.delete("obra", expAnterior.obra);
+                    FirmaAutorEntity.delete("expediente", expAnterior);
+                    expAnterior.delete();
+                    expAnterior.obra.delete();
+                }
+            }
 
-        ExpedienteForenseEntity expDb = new ExpedienteForenseEntity();
-        expDb.id = UUID.fromString(idExpediente);
-        expDb.obra = obraEntity;
-        expDb.hashPsdOriginal = contexto.getSha512PSD();
-        expDb.hashImagenFinal = contexto.getSha512Imagen();
-        expDb.similitudPhash = new java.math.BigDecimal("99.99");
-        expDb.resultadoAnalisis = "APROBADO";
-        expDb.evidenciaTecnicaJson = "{}";
-        expDb.fechaAnalisis = LocalDateTime.now();
-        expDb.persist();
+            ObraEntity obraEntity = new ObraEntity();
+            obraEntity.id = UUID.randomUUID();
+            obraEntity.usuario = usuarioDb;
+            obraEntity.titulo = obra.getTitulo();
+            obraEntity.descripcion = obra.getDescripcion();
+            obraEntity.categoria = cat.name();
+            obraEntity.software = obra.getSoftware();
+            obraEntity.hardware = obra.getHardware();
+            obraEntity.fechaCreacion = obra.getFechaCreacion();
+            obraEntity.fechaRegistro = LocalDateTime.now();
+            obraEntity.estadoActual = "ESPERANDO_FIRMA";
+            obraEntity.persist();
 
-        HistorialEstadoEntity hist = new HistorialEstadoEntity();
-        hist.id = UUID.randomUUID();
-        hist.obra = obraEntity;
-        hist.estadoAnterior = "ANALIZADO";
-        hist.estadoNuevo = "ESPERANDO_FIRMA";
-        hist.fechaCambio = LocalDateTime.now();
-        hist.observacion = "Fase 2 completada.";
-        hist.persist();
+            expDb = new ExpedienteForenseEntity();
+            expDb.id = UUID.fromString(idExpediente);
+            expDb.obra = obraEntity;
+            expDb.hashPsdOriginal = contexto.getSha512PSD();
+            expDb.hashImagenFinal = contexto.getSha512Imagen();
+            expDb.similitudPhash = new java.math.BigDecimal("99.99");
+            expDb.resultadoAnalisis = "APROBADO";
+            expDb.evidenciaTecnicaJson = "{}";
+            expDb.fechaAnalisis = LocalDateTime.now();
+            expDb.persist();
+
+            HistorialEstadoEntity hist = new HistorialEstadoEntity();
+            hist.id = UUID.randomUUID();
+            hist.obra = obraEntity;
+            hist.estadoAnterior = "ANALIZADO";
+            hist.estadoNuevo = "ESPERANDO_FIRMA";
+            hist.fechaCambio = LocalDateTime.now();
+            hist.observacion = "Fase 2 completada.";
+            hist.persist();
+        } else {
+            // Rectificación: Actualizar obra existente
+            ObraEntity obraEntity = expDb.obra;
+            obraEntity.usuario = usuarioDb;
+            obraEntity.titulo = obra.getTitulo();
+            obraEntity.descripcion = obra.getDescripcion();
+            obraEntity.categoria = cat.name();
+            obraEntity.software = obra.getSoftware();
+            obraEntity.hardware = obra.getHardware();
+            obraEntity.fechaCreacion = obra.getFechaCreacion();
+            obraEntity.persist();
+            
+            HistorialEstadoEntity hist = new HistorialEstadoEntity();
+            hist.id = UUID.randomUUID();
+            hist.obra = obraEntity;
+            hist.estadoAnterior = obraEntity.estadoActual;
+            hist.estadoNuevo = obraEntity.estadoActual;
+            hist.fechaCambio = LocalDateTime.now();
+            hist.observacion = "Rectificación de datos de Fase 2.";
+            hist.persist();
+        }
     }
 
     @Transactional
@@ -236,7 +292,9 @@ public class CertificacionOrchestrator {
         FirmaAutor firma = firmaServ.firmar(expedienteJson, p12File, password);
         contexto.setFirmaAutor(firma);
 
-        contexto.getEstadoActual().avanzar(contexto); // Avanza a CertificadoState
+        if (contexto.getEstadoActual() instanceof ec.edu.uce.certificadorforense.core.state.FirmaAutorState) {
+            contexto.getEstadoActual().avanzar(contexto); // Avanza a CertificadoState
+        }
 
         // PERSISTENCIA DB
         ExpedienteForenseEntity expDb = ExpedienteForenseEntity.findById(UUID.fromString(idExpediente));
@@ -264,6 +322,11 @@ public class CertificacionOrchestrator {
         expDb.obra.estadoActual = "CERTIFICADO";
         expDb.obra.persist();
 
+        // **NUEVO FLUJO**: Generar el ZIP de forma asíncrona pero antes de responder
+        // para que esté listo cuando el usuario haga clic en descargar.
+        byte[] zipGenerado = emitirCertificadoFase4(idExpediente);
+        contexto.setZipGenerado(zipGenerado);
+
         return firma.getHashExpediente();
     }
 
@@ -281,7 +344,7 @@ public class CertificacionOrchestrator {
         Certificado certificado = certServ.generar(contexto.getExpediente(), expedienteFirmadoJson);
         contexto.setCertificado(certificado);
 
-        String imagenBase64 = Base64.getEncoder().encodeToString(Files.readAllBytes(new File(contexto.getArchivoImagen().getRutaAbsoluta()).toPath()));
+        String imagenBase64 = Base64.getEncoder().encodeToString(contexto.getImagenRaw());
 
         byte[] pdfSinFirmar = generadorPDF.generar(certificado, contexto.getExpediente(), expedienteFirmadoJson, imagenBase64);
         
@@ -304,7 +367,7 @@ public class CertificacionOrchestrator {
         }
         
         String jsonEstegano = "{\"id\":\"" + certificado.getIdCertificado() + "\",\"hash\":\"" + certificado.getHashExpedienteFirmado() + "\"}";
-        byte[] imagenCert = estegano.inyectar(Files.readAllBytes(new File(contexto.getArchivoImagen().getRutaAbsoluta()).toPath()), jsonEstegano);
+        byte[] imagenCert = estegano.inyectar(contexto.getImagenRaw(), jsonEstegano);
         contexto.setImagenCertificada(imagenCert);
 
         // Persistencia Final DB
@@ -320,8 +383,17 @@ public class CertificacionOrchestrator {
         certDb.fechaEmision = LocalDateTime.now();
         certDb.persist();
 
-        // Limpiar memoria
-        contextoCache.remove(idExpediente);
+        HistorialEstadoEntity hist = new HistorialEstadoEntity();
+        hist.id = UUID.randomUUID();
+        hist.obra = expDb.obra;
+        hist.estadoAnterior = "CERTIFICADO";
+        hist.estadoNuevo = "FINALIZADO";
+        hist.fechaCambio = LocalDateTime.now();
+        hist.observacion = "Fase 4 completada. Certificado y ZIP generados.";
+        hist.persist();
+        
+        expDb.obra.estadoActual = "FINALIZADO";
+        expDb.obra.persist();
 
         // Generar Zip
         java.io.ByteArrayOutputStream baosZip = new java.io.ByteArrayOutputStream();
@@ -340,5 +412,20 @@ public class CertificacionOrchestrator {
         zos.close();
 
         return baosZip.toByteArray();
+    }
+
+    public byte[] obtenerZipYLimpiar(String idExpediente) {
+        ContextoProceso contexto = contextoCache.get(idExpediente);
+        if (contexto == null) {
+            throw new RuntimeException("Expediente expirado o no existe.");
+        }
+        byte[] zip = contexto.getZipGenerado();
+        if (zip == null) {
+            throw new RuntimeException("El archivo ZIP no se generó correctamente en el paso anterior.");
+        }
+        
+        // Limpiar memoria AHORA (en el paso 4) para evitar saturación de RAM
+        contextoCache.remove(idExpediente);
+        return zip;
     }
 }

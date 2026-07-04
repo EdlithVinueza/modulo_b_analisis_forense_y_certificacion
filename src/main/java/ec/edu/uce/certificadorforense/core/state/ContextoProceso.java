@@ -38,6 +38,7 @@ public class ContextoProceso {
     private ArchivoImagen archivoImagen;
 
     // ── FASE 1: Resultados del análisis forense ──────────────────────────────
+    private byte[] imagenRaw;
     private VeredictoFinal veredictoPSD;
     private VeredictoFinal veredictoImagen;
     private String sha512PSD;
@@ -60,6 +61,7 @@ public class ContextoProceso {
     private Certificado certificado;
     private byte[] pdfCertificado;
     private byte[] imagenCertificada;
+    private byte[] zipGenerado;
 
     /**
      * Crea un contexto vacío con el estado inicial: {@link AnalisisForenseState}.

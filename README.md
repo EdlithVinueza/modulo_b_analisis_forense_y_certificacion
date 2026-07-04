@@ -1,517 +1,523 @@
-# Documentación del Módulo B: Análisis Forense y Certificación
+```md
+# Microservicio B: Análisis Forense y Certificación
 
-## 1. Propósito de este módulo
+## Propósito General
 
-El Módulo B es el motor pericial del sistema. Su propósito principal es **analizar, preservar y registrar evidencias de autoría** mediante procedimientos forenses, criptográficos y documentales. 
-El módulo genera evidencia técnica verificable que permite demostrar la existencia de una obra digital en un momento determinado y conserva información relevante sobre su proceso de creación y autenticidad.
+El propósito principal de este microservicio es orquestar el flujo de validación técnica, registro, firma y certificación de las obras digitales. Este microservicio garantiza la integridad de los archivos a través de un análisis forense (mediante la extracción y análisis de metadata, estructura y similitud visual), recopilando los datos del autor y generar un expediente que será firmado digitalmente con el certificado (.p12) del artista garantizando autoría y no repudio. Finalmente, el sistema inyecta un identificador único en la imagen mediante esteganografía y sella el certificado PDF con la firma del sistema bajo el estándar PAdES, permitiendo así verificar la autenticidad de cualquier obra en circulación directamente desde el archivo, conservando así también su integridad visual.
 
----
+## Pasos del Análisis y Certificación
 
-## 2. Certificados y Autoridad Raíz (ROOT CA)
+### Paso 1: Análisis de estructura y metadata de archivos PSD, PNG y JPEG
 
-En una Infraestructura de Clave Pública (PKI), la confianza no es automática: se construye mediante una jerarquía de autoridades certificadoras. En sistemas reales, esta confianza proviene de entidades externas. Sin embargo, en sistemas de investigación como nuestro sistema forense digital, se utiliza una ROOT CA propia.
+El sistema somete al archivo de trabajo original exportado a formato PSD y a la imagen final exportada (PNG o JPEG) a un proceso forense con tres pilares fundamentales para garantizar la autenticidad de la obra:
 
-En este sistema forense, NO existe acceso a una CA gubernamental real o integración con infraestructura nacional. Por lo tanto, se crea un punto de confianza propio (`root_ca.p12`).
+- **Análisis de Metadatos:** Recorremos los bloques de información oculta (EXIF, XMP, perfiles de color) para encontrar evidencias de manipulación o copiado.
+- **Análisis Estructural:** Verificación de integridad a través de bytes, leyendo firmas binarias y decodificando la arquitectura interna (como las capas de Photoshop).
+- **Comparación Visual (pHash):** Verificación matemática algorítmica para asegurar que la imagen final provenga indiscutiblemente del lienzo de trabajo aportado.
 
-### Razones Técnicas
-1.  **Control total del sistema:** Se define quién firma, qué se firma y cómo se valida.
-2.  **Sistema cerrado (forense):** El sistema no necesita ser válido en Internet, sino solo dentro de su ecosistema.
-3.  **Simulación real de PKI:** Una ROOT CA propia reproduce la jerarquía de confianza, firma y verificación de integridad de forma idéntica a la vida real.
-4.  **Independencia de terceros:** No se depende de gobiernos o empresas externas.
-5.  **Reproducibilidad académica:** El sistema puede ejecutarse en cualquier máquina sin caducar o depender de APIs.
+#### 1.1 Extracción de metadatos
 
-### Diferencia Clave con Sistemas Reales
-| Característica | Mundo Real | Nuestro Sistema |
-| --- | --- | --- |
-| **ROOT CA** | Preinstalada globalmente en OS/Navegadores | Creada y validada localmente |
-| **Validez Legal** | Estatal e Internacional | Académica / Soporte Técnico Forense |
-| **Dependencia** | Alta (Entidades externas pagas/públicas) | Ninguna (Autónomo) |
+Se usa la librería `metadata-extractor` con una arquitectura de **extractores especializados e inyectables**, esto nos permite recorrer los directorios de metadata de manera modular, además de ayudarnos a recolectar la mayor cantidad de datos posible si en dado caso los archivos no tuvieran algún formato específico de metadatos. Para procesar PSD y las imágenes se utilizan servicios dedicados que aplican los extractores en un orden de prioridad específico (estrategia Last-Win o sobrescritura sucesiva).
 
-### Justificación Académica para la Tesis
-*En el presente modulo se implementa una Autoridad Certificadora raíz (ROOT CA) simulada, con el objetivo de establecer un punto de confianza dentro de una infraestructura de clave pública (PKI) cerrada.*
-
-*En sistemas reales, la confianza en certificados digitales proviene de autoridades certificadoras raíz preinstaladas en sistemas operativos y navegadores, las cuales actúan como anclas de confianza global. Sin embargo, en entornos controlados o de investigación, no es posible ni necesario depender de infraestructuras externas.*
-
-*Por ello, la ROOT CA implementada en este sistema cumple la función de autoridad de confianza interna, permitiendo la emisión y validación de certificados digitales utilizados para la firma de documentos, garantizando integridad y autenticidad dentro del sistema forense propuesto.*
-
-### Recomendación en la Nube
-Para fines del prototipo el certificado se aloja en el servidor. Si el prototipo se despliega en la nube, es vital resguardar la ROOT CA de forma segura (Ej. Azure Key Vault) y referenciarla mediante variables de entorno (`CA_KEYSTORE_PATH`) para no invalidar los certificados emitidos previamente.
-
----
-
-## 3. Arquitectura del Proyecto (Arquitectura Hexagonal)
-
-El diseño estructural del sistema se fundamenta rigurosamente en los principios de la **Arquitectura Hexagonal** (Ports & Adapters). Este enfoque garantiza un desacoplamiento absoluto entre el núcleo de la aplicación —donde residen las reglas de negocio y las complejas validaciones forenses— y los mecanismos tecnológicos externos responsables de la infraestructura.
-
-El objetivo principal es proteger y aislar la lógica pericial frente a la obsolescencia o cambios tecnológicos. **Por esta estricta razón, todo el paquete `core` está escrito exclusivamente en Java Puro**, sin importar dependencias externas (como Spring, iText, Jackson, etc.).
-
-Dentro de este ecosistema puro (el Core), existen dos tipos de interfaces:
-1. **Interfaces Internas del Dominio:** Como `EstadoProceso` o `EventListener`. Estas interfaces viven 100% dentro del Core, manejando la lógica de negocio.
-2. **Puertos (Interfaces de Frontera):** Interfaces abstractas que definen requerimientos que necesitan contacto con el mundo exterior (ej. guardar un archivo). El Core dicta el contrato (el *qué*).
-
-**Adaptadores (Infraestructura):** Implementaciones tecnológicas concretas de los puertos (el *cómo*), utilizando herramientas específicas.
-
-**Diagrama de Arquitectura Hexagonal:**
-```mermaid
-graph TD
-    subgraph "Infraestructura (Capa Externa)"
-        A["CLI Runner / Web Controller"]
-        E["GeneradorPDFAdapter (iText)"]
-        F["EsteganografiaPNGAdapter"]
-        G["FirmadorP12Adapter (java.security)"]
-    end
-    
-    subgraph "Core / Dominio (Capa Interna)"
-        C(("Servicios Core y Validaciones"))
-        B["Puerto de Entrada: Caso de Uso"]
-        D["Puertos de Salida: Interfaces Port"]
-        B --> C
-        C --> D
-    end
-
-    A -. Inyecta Datos .-> B
-    E -. Implementa .-> D
-    F -. Implementa .-> D
-    G -. Implementa .-> D
-    
-    style C fill:#3498db,stroke:#2980b9,stroke-width:2px,color:#fff
-```
-
-**Desglose del Código Fuente (Paquetes de la Arquitectura):**
-*   `ec.edu.uce.certificadorforense.core` (El Núcleo Puro):
-    *   `model/`: Entidades inmutables de dominio (`Expediente`, `Obra`, `Autor`, `ArchivoPSD`). No tienen anotaciones de base de datos ni dependencias externas.
-    *   `ports/`: Interfaces de entrada (`in`) para definir casos de uso y de salida (`out`) para requerir adaptadores.
-    *   `service/`: Lógica central, como el `ValidadorGenericoService` que orquesta las reglas forenses.
-    *   `state/`: Implementación del patrón State con `ContextoProceso` y las clases de cada fase (`AnalisisForenseState`, `DatosObraState`, etc.).
-    *   `rules/`: Reglas forenses individuales basadas en el patrón Strategy.
-    *   `observer/`: Definición de eventos asíncronos y listeners del dominio (Audit Trail).
-*   `ec.edu.uce.certificadorforense.infrastructure.adapters` (Mundo Exterior):
-    *   `db/`: Repositorios Panache y entidades Hibernate (`ExpedienteForenseEntity`, `ObraEntity`) mapeadas a PostgreSQL.
-    *   `rest/`: Controladores JAX-RS (Endpoints) y DTOs para comunicación HTTP con el frontend.
-    *   `extractors/` y `processors/`: Lectura secuencial a bajo nivel de PSDs e imágenes sin sobrecargar la RAM.
-    *   `esteganografia/`: Adaptadores binarios para inyectar payloads JSON en PNG (`tEXt`) y JPEG (`APP11`).
-    *   `pdf/` y `firma/`: Generación documental con iText y sellado criptográfico PKCS#12 con Java Security.
-    *   `qr/`: Generación de códigos bidimensionales (ZXing).
-    *   `json/`: Serialización determinista del expediente (Gson).
-    *   `hash/`: Generación de firmas SHA-512 y cálculo matemático del pHash (Perceptual Hash).
-
-**Ejemplo Práctico en el Código:**
-
-1. **En el Core (Capa Interna):** Solo definimos *QUÉ* necesitamos hacer.
 ```java
-// src/main/java/ec/edu/uce/certificadorforense/core/ports/out/EsteganografiaPort.java
-public interface EsteganografiaPort {
-    byte[] inyectar(byte[] imagenOriginal, String jsonCertificacion);
-    String extraer(byte[] imagenCertificada);
-}
-```
+public class MetadatosImagenService {
+    private final List<MetadataExtractor<MetadatosImagen.MetadatosImagenBuilder>> extractores;
 
-2. **En la Infraestructura (Capa Externa):** Definimos *CÓMO* se hace.
-```java
-// src/main/java/ec/edu/uce/certificadorforense/infrastructure/adapters/esteganografia/EsteganografiaPNGAdapter.java
-public class EsteganografiaPNGAdapter implements EsteganografiaPort {
-    @Override
-    public byte[] inyectar(byte[] imagenOriginal, String jsonCertificacion) {
-        // Lógica de inyección binaria específica para formato PNG (Chunk tEXt)
+    public MetadatosImagenService() {
+        this.extractores = Arrays.asList(
+            new FileType(), // Identifica formato real
+            new Png(),      // Datos estructurales PNG (pHYs, gAMA, sRGB)
+            new Jpeg(),     // Dimensiones JPG
+            new Jfif(),     // Densidad de píxeles (DPI) en APP0
+            new Exif(),     // Respaldo de DPI y metadatos de hardware
+            new Icc()       // Perfil de color incrustado
+        );
     }
-}
-```
-*Ventaja clave:* Si en el futuro se quiere soportar esteganografía en TIFF, solo se crea un `EsteganografiaTIFFAdapter` sin alterar el Core.
-
-### Justificación de las Decisiones Arquitectónicas y Alcance Jurídico
-La plataforma no tiene como objetivo reemplazar a las entidades gubernamentales encargadas del registro de propiedad intelectual. Su función consiste en generar evidencia técnica verificable. 
-Se decidió operar de manera independiente de organismos estatales debido a:
-1. **Alcance académico y de investigación:** Implementar una infraestructura equivalente a una Autoridad de Certificación oficial excede los objetivos y recursos.
-2. **Complejidad regulatoria:** Evitar políticas formales que no forman parte del alcance de este trabajo.
-3. **Enfoque en evidencia técnica:** El valor radica en el análisis forense, hashes SHA-512, esteganografía y firma electrónica.
-4. **Portabilidad tecnológica:** Al no depender de plataformas gubernamentales, el sistema puede ejecutarse localmente o desplegarse en cualquier nube.
-
----
-
-## 4. Patrones de Diseño Utilizados
-
-<a name="patron-state"></a>
-### 4.1 Patrón State (Máquina de Estados del Proceso)
-*   **¿Cómo funciona?** El flujo de certificación se comporta como una máquina de estados finitos que atraviesa 4 etapas secuenciales (`AnalisisForenseState` → `DatosObraState` → `FirmaAutorState` → `CertificacionState`). Cada estado encapsula la lógica para procesar, validar y transicionar a la siguiente fase, garantizando que ninguna validación forense o paso legal se omita. Todos los estados comparten un `ContextoProceso` que acumula los datos generados (hashes, expediente, etc.).
-*   **¿Dónde se encuentra?** En el paquete `src/main/java/ec/edu/uce/certificadorforense/core/state/`. Aquí residen la interfaz base (`EstadoProceso.java`), la entidad contenedora (`ContextoProceso.java`) y todas las clases concretas.
-*   **¿Cómo se emplea?** Se ejecuta `ejecutar(contexto)` para la lógica principal, `validar(contexto)` para verificar la integridad, y finalmente `avanzar(contexto)` para que el patrón asigne automáticamente la siguiente clase de estado, evitando condicionales masivos (`if/else`).
-
-### 4.2 Patrón Observer
-Gestiona la publicación de eventos asíncronos (`EventoAnalisisIniciado`, `EventoFirmaRealizada`, etc.) permitiendo a distintos módulos reaccionar (como audit trails o logs) sin acoplarse al código de certificación central.
-
-### 4.3 Patrón Strategy
-Se utiliza de forma extensiva en la `ValidadorGenericoService`, permitiendo que las reglas de validación forense sean intercambiables y aplicadas dinámicamente como una lista de estrategias sin alterar la clase contenedora.
-
----
-
-## 5. MicroProfile y Tecnologías Base
-
-El proyecto está desarrollado sobre **Quarkus** (`io.quarkus:quarkus-bom`), aprovechando las especificaciones de **Eclipse MicroProfile** para aplicaciones Cloud Native:
-
-*   **Configuración (MicroProfile Config):** Inyección de variables de entorno mediante `@ConfigProperty` para evitar configuraciones hardcodeadas (ej. contraseñas, URLs de BD).
-*   **Context and Dependency Injection (CDI):** Uso intensivo de `@ApplicationScoped` y `@Inject` para manejar el ciclo de vida de los adaptadores y servicios.
-*   **JSON-B / REST:** Exposición de endpoints asíncronos y serialización JSON estándar, ideal para arquitecturas modernas.
-
-### Mapa de Dependencias del Proyecto
-El `build.gradle.kts` refleja una selección estricta de librerías para cubrir las necesidades periciales sin romper la arquitectura:
-
-*   **Framework Base:** `io.quarkus:quarkus-bom` (Motor Cloud Native).
-*   **API y REST:** `quarkus-rest`, `quarkus-rest-jsonb` (Endpoints y serialización base).
-*   **Persistencia:** `quarkus-hibernate-orm-panache`, `quarkus-jdbc-postgresql`, `quarkus-flyway` (Manejo de BD y control de versiones del esquema SQL).
-*   **Análisis Forense (Fase 1):** 
-    *   `com.drewnoakes:metadata-extractor` (Extracción profunda de EXIF, XMP e ICC Profiles).
-    *   `com.twelvemonkeys.imageio:imageio-psd` (Lectura y compositeado nativo de archivos Photoshop sin requerir software de Adobe).
-*   **Serialización Determinista (Fases 2 y 3):** `com.google.code.gson:gson` (Usado en el adaptador JSON para construir el wrapper firmado).
-*   **Certificación y Emisión (Fase 4):**
-    *   `com.itextpdf:itext7-core` y `html2pdf` (Generación de PDF).
-    *   `com.itextpdf:sign` y `org.bouncycastle:bcpkix-jdk15on` (Inyección de archivos adjuntos y firma avanzada PADES-CMS).
-    *   `org.thymeleaf:thymeleaf` (Motor de plantillas HTML para el diseño del certificado).
-    *   `com.google.zxing:core` (Generación del código QR).
-*   **Reducción de Boilerplate:** `org.projectlombok:lombok` (Para constructores y el patrón `@Builder` en las entidades del Core).
-
----
-
-## 6. Estructura de la Base de Datos Relacional
-
-Para soportar la estrategia arquitectónica, el siguiente esquema de base de datos SQL define cómo persistir el proceso forense (Ej. PostgreSQL). Está fuertemente normalizado para evitar redundancia y proteger la inmutabilidad de los datos.
-
-### Ciclo de Vida de Inserción (Mapping por Fases)
-*   **Fase 1 (Análisis Forense):** Se crea el registro base en `expedientes_forenses` y se guarda el análisis extraído automáticamente. *Nota: El hash del PSD es UNIQUE para evitar duplicados.*
-*   **Fase 2 (Datos Declarados):** Se inserta o recupera al usuario en `usuarios` y se registra la información en `obras`.
-*   **Fase 3 (Firma Autor):** Se inserta el resultado de la firma en `firmas_autor`.
-*   **Fase 4 (Certificación):** Se inserta el núcleo del sistema en la tabla `certificados` guardando el PDF original en crudo (SINGLE SOURCE OF TRUTH).
-
-```sql
--- 1. USUARIOS (Módulo A: Registro Web)
-CREATE TABLE usuarios (
-    id UUID PRIMARY KEY,
-    cedula VARCHAR(20) NOT NULL UNIQUE,
-    nombres VARCHAR(100) NOT NULL,
-    apellidos VARCHAR(100) NOT NULL,
-    correo VARCHAR(150) NOT NULL UNIQUE,
-    nombre_artistico VARCHAR(100),
-    password_hash VARCHAR(255) NOT NULL,
-    acepta_terminos_plataforma BOOLEAN DEFAULT FALSE,
-    fecha_registro TIMESTAMP NOT NULL DEFAULT NOW(),
-    activo BOOLEAN DEFAULT TRUE
-);
-
--- 2. OBRAS
-CREATE TABLE obras (
-    id UUID PRIMARY KEY,
-    usuario_id UUID NOT NULL REFERENCES usuarios(id),
-    titulo VARCHAR(255) NOT NULL,
-    descripcion TEXT,
-    categoria VARCHAR(50),
-    software VARCHAR(120),
-    hardware VARCHAR(120),
-    fecha_creacion DATE,
-    fecha_registro TIMESTAMP NOT NULL DEFAULT NOW(),
-    estado_actual VARCHAR(50) NOT NULL
-);
-
--- 2.1. DECLARACIONES LEGALES DE LA OBRA
-CREATE TABLE declaraciones_obra (
-    id UUID PRIMARY KEY,
-    obra_id UUID NOT NULL UNIQUE REFERENCES obras(id),
-    es_titular_derechos BOOLEAN NOT NULL DEFAULT FALSE,
-    acepta_terminos_certificacion BOOLEAN NOT NULL DEFAULT FALSE,
-    fecha_aceptacion TIMESTAMP NOT NULL DEFAULT NOW(),
-    ip_registro VARCHAR(45)
-);
-
--- 3. EXPEDIENTES / ANÁLISIS FORENSE
-CREATE TABLE expedientes_forenses (
-    id UUID PRIMARY KEY,
-    obra_id UUID NOT NULL UNIQUE REFERENCES obras(id),
-    hash_psd_original TEXT NOT NULL UNIQUE, 
-    hash_imagen_final TEXT NOT NULL,
-    similitud_phash DECIMAL(5,2),
-    resultado_analisis VARCHAR(50) NOT NULL,
-    evidencia_tecnica JSONB NOT NULL, 
-    fecha_analisis TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
--- 4. FIRMAS DIGITALES DEL AUTOR
-CREATE TABLE firmas_autor (
-    id UUID PRIMARY KEY,
-    expediente_id UUID NOT NULL UNIQUE REFERENCES expedientes_forenses(id),
-    usuario_id UUID NOT NULL REFERENCES usuarios(id),
-    hash_firmado TEXT NOT NULL,
-    firma_base64 TEXT NOT NULL,
-    algoritmo VARCHAR(50) NOT NULL,
-    fecha_firma TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
--- 5. CERTIFICADOS EMITIDOS
-CREATE TABLE certificados (
-    id UUID PRIMARY KEY,
-    obra_id UUID NOT NULL UNIQUE REFERENCES obras(id),
-    numero_certificado VARCHAR(100) UNIQUE NOT NULL,
-    expediente_firmado_raw TEXT NOT NULL, -- SINGLE SOURCE OF TRUTH (El archivo legal intacto)
-    hash_certificado TEXT NOT NULL, 
-    fecha_emision TIMESTAMP NOT NULL DEFAULT NOW()
-);
-
--- 6. HISTORIAL DE ESTADOS
-CREATE TABLE historial_estados (
-    id UUID PRIMARY KEY,
-    obra_id UUID NOT NULL REFERENCES obras(id),
-    estado_anterior VARCHAR(50),
-    estado_nuevo VARCHAR(50) NOT NULL,
-    observacion TEXT,
-    fecha_cambio TIMESTAMP NOT NULL DEFAULT NOW()
-);
-```
-
----
-
-## 7. Los 12 Factores (12-Factor App)
-
-Este módulo se diseñó siguiendo los preceptos 12-Factor:
-1.  **Codebase:** Un único repositorio versionado.
-2.  **Dependencies:** Dependencias explícitas en `build.gradle.kts`.
-3.  **Config:** La CA, usuarios y passwords de DB se inyectan vía variables de entorno.
-4.  **Backing services:** PostgreSQL tratado como recurso adjunto.
-5.  **Build, release, run:** Empaquetado estricto (Quarkus JAR/Native).
-6.  **Processes (Stateless):** El módulo no guarda estados en memoria RAM entre peticiones; las firmas y archivos temporales fluyen a disco temporal o BD (Zero-File Retention).
-7.  **Port binding:** Exposición autónoma vía HTTP.
-
----
-
-## 8. Estrategia de Almacenamiento a Futuro (Zero-File Retention)
-
-El diseño arquitectónico del sistema estipula que a futuro **no se deben almacenar archivos físicos (ni PSD, ni PNG, ni PDF)** en la infraestructura del servidor, sino **únicamente datos (El Expediente JSON)**.
-
-Esta decisión responde a las siguientes justificaciones técnicas y legales:
-1.  **Ahorro Masivo de Costos:** Almacenar documentos JSON estructurados requiere un espacio minúsculo en comparación con los Gigabytes de archivos PSD.
-2.  **Cero Responsabilidad sobre Propiedad Intelectual:** Al no alojar las imágenes fuente, el sistema se exime de responsabilidades legales por filtración de obras de arte. El sistema actúa exclusivamente como un "Notario Digital".
-3.  **La Criptografía Sustituye al Archivo:** La Fase 1 extrae el **Hash SHA-512** del archivo y lo sella dentro del Expediente firmado. Si el autor presenta su PSD en un tribunal, al recalcular el hash, coincidirá matemáticamente con el perpetuado en el sistema.
-4.  **Generación Bajo Demanda:** Dado que el sistema conserva los datos inmutables del Expediente, el certificado PDF podría ser regenerado matemáticamente y vuelto a firmar en cualquier momento.
-
----
-
-## 9. Flujo General del Análisis y Certificación
-
-El proceso completo se divide en 4 fases principales, controladas mediante el patrón [**State**](#patron-state), asegurando que no se pueda omitir ninguna validación forense.
-
-```mermaid
-graph TD
-    %% Nodos principales
-    Inicio([Inicio del Proceso]) --> F1
-    
-    subgraph Fase 1: Análisis Forense
-        F1[Recibir Archivos PSD y PNG] --> Ext[Extracción de Metadatos y Hashes]
-        Ext --> Val[Validación de Reglas Forenses]
-        Val --> PH[Comparación Perceptual pHash]
-    end
-    
-    subgraph Fase 2: Datos de Obra
-        PH --> D1[Recopilar Datos del Autor]
-        D1 --> D2[Recopilar Datos de la Obra]
-        D2 --> D3[Aceptar Declaraciones Juradas]
-    end
-    
-    subgraph Fase 3: Firma del Autor
-        D3 --> E1[Consolidar Expediente JSON]
-        E1 --> E2[Firmar JSON con certificado .p12 del Autor]
-    end
-    
-    subgraph Fase 4: Emisión y Esteganografía
-        E2 --> C1[Generar Certificado y Código QR]
-        C1 --> C2[Generar PDF con Expediente Incrustado]
-        C2 --> C3[Firmar PDF con certificado CA Root]
-        C3 --> C4[Inyectar ID y Hash ocultos en PNG original]
-    end
-    
-    C4 --> Fin([Proceso Completado])
-```
-
-### Detalles Técnicos por Fase
-
-### Fase 1: Análisis Forense Digital
-Esta fase representa el filtro crítico para asegurar que las obras no han sido falsificadas. Se divide en el análisis estructural a bajo nivel y las validaciones forenses.
-
-**Dependencias Involucradas:**
-*   `com.drewnoakes:metadata-extractor`: Extracción de metadatos profundos (EXIF, perfiles de color) de las imágenes.
-*   `com.twelvemonkeys.imageio:imageio-psd`: Permite renderizar y leer archivos PSD usando `ImageIO.read()` para lograr hacer el compositeado (combinación visual) y generar la imagen comparativa del pHash.
-
-#### Análisis de Metadatos y Estructura a Bajo Nivel (PSD e Imágenes)
-El sistema no confía en la extensión del archivo. En lugar de cargar las imágenes completas en la memoria RAM (lo cual podría causar un `OutOfMemoryError` con archivos pesados), el sistema utiliza lectura secuencial binaria (`DataInputStream`). Se aplican saltos estratégicos (`skipBytes`) para descartar los bloques de píxeles puros y parsear únicamente las cabeceras binarias y la metadata esencial.
-
-**Para archivos PSD:** Se valida la firma "8BPS" y se analizan las dimensiones, cantidad de canales y detalles de cada capa sin renderizarla.
-```java
-// Ahorro de Memoria: Lectura de capas descartando bytes de píxeles (skipBytes)
-int cantidadCapas = Math.abs(dis.readShort());
-for (int i = 0; i < cantidadCapas; i++) {
-    int top = dis.readInt(), left = dis.readInt(), bottom = dis.readInt(), right = dis.readInt();
-    skipExacto(dis, 4); // Firma "8BIM"
-    byte[] blendBytes = new byte[4];
-    dis.readFully(blendBytes);
-    // ... se extraen metadatos capa por capa
-}
-```
-
-**Para imágenes PNG / JPEG:** Se extrae la densidad de píxeles (DPI) buscando el chunk `pHYs` en PNG o el segmento `APP0` en JPEG sin cargar la imagen a RAM.
-
-#### Validación de Reglas (Patrón Strategy)
-Una vez parseado a un objeto de dominio (`ArchivoPSD` o `ArchivoImagen`), se somete a validaciones usando un Validador Genérico.
-```java
-public VeredictoFinal validar(T objeto) {
-    VeredictoFinal veredicto = new VeredictoFinal();
-    for (IReglaValidacion<T> regla : reglas) {
-        ResultadoValidacion resultado = regla.validar(objeto);
-        veredicto.agregarResultado(resultado, regla.esCritica());
-        if (veredicto.isEsRechazado()) break; // Cortocircuito si la regla es crítica
-    }
-    return veredicto;
-}
-```
-
-#### Comparación Perceptual (pHash)
-Se valida si el lienzo interno del PSD y la imagen renderizada final se ven igual para el ojo humano (>= 95% de similitud).
-
-```java
-public String generarHash(BufferedImage imagen) {
-    Image escala = imagen.getScaledInstance(8, 8, Image.SCALE_SMOOTH);
     // ...
-    StringBuilder hash = new StringBuilder();
-    for (int y = 0; y < 8; y++) {
-        for (int x = 0; x < 8; x++) {
-            hash.append((miniatura.getRGB(x, y) & 0xFF) >= promedio ? "1" : "0");
+}
+```
+
+**Orquestación de extractores para el lienzo de trabajo (PSD):**
+
+```java
+public class MetadatosPSDService {
+    private final List<MetadataExtractor<MetadatosPSD.MetadatosPSDBuilder>> extractors;
+
+    public MetadatosPSDService() {
+        // Ordenados de MENOS fiable a MÁS fiable (Last-Win)
+        this.extractors = Arrays.asList(
+            new Jfif(),      // Muy genérico (prioridad baja)
+            new Exif(),      // Datos de cámara/motor (prioridad media)
+            new Iptc(),      // Datos de prensa (prioridad media)
+            new Xmp(),       // Datos Adobe (prioridad alta)
+            new Photoshop(), // Recursos específicos (prioridad alta)
+            new PsdHeader(), // LA VERDAD BINARIA (prioridad máxima)
+            new FileType()   // Identificación final
+        );
+    }
+
+    public MetadatosPSD procesarArchivo(File archivo) {
+        MetadatosPSD.MetadatosPSDBuilder builder = MetadatosPSD.builder();
+        try {
+            Metadata metadata = ImageMetadataReader.readMetadata(archivo);
+            for (MetadataExtractor<MetadatosPSD.MetadatosPSDBuilder> extractor : extractors) {
+                try {
+                    extractor.extraer(metadata, builder);
+                } catch (Exception ex) {
+                    System.err.println("Advertencia en PSD: El extractor " + extractor.getClass().getSimpleName() + " falló.");
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error crítico: " + e.getMessage());
+        }
+        return builder.build();
+    }
+}
+```
+
+Cada extractor implementa la interfaz `MetadataExtractor`, por ejemplo, el análisis más crítico para un archivo PSD es la extracción de su encabezado binario (Verdad Binaria) para conocer su estructura real de capas, dimensiones, bits por canal y modo de color (RGB, CMYK, etc.):
+
+**Ejemplo de Extractor Estructural (PsdHeader):**
+
+```java
+public class PsdHeader implements MetadataExtractor<MetadatosPSD.MetadatosPSDBuilder> {
+    @Override
+    public void extraer(Metadata metadata, MetadatosPSD.MetadatosPSDBuilder builder) {
+        PsdHeaderDirectory directory = metadata.getFirstDirectoryOfType(PsdHeaderDirectory.class);
+        if (directory != null) {
+            builder.cantidadCanales(directory.getInteger(PsdHeaderDirectory.TAG_CHANNEL_COUNT))
+                   .altoImagen(directory.getInteger(PsdHeaderDirectory.TAG_IMAGE_HEIGHT))
+                   .anchoImagen(directory.getInteger(PsdHeaderDirectory.TAG_IMAGE_WIDTH))
+                   .bitsPorCanal(directory.getInteger(PsdHeaderDirectory.TAG_BITS_PER_CHANNEL))
+                   .modoColor(directory.getDescription(PsdHeaderDirectory.TAG_COLOR_MODE));
         }
     }
-    return hash.toString();
 }
 ```
 
----
+Entre los principales formatos de metadatos que se analizaron tenemos los siguientes:
 
-### Fase 2: Datos de la Obra y Autor
-En esta fase, **el sistema solicita la información declarativa** por parte del artista. El sistema recolecta los datos legales y descriptivos y los fusiona con los resultados forenses de la Fase 1.
+| **Extractor**   | **Aplica a** | **Información obtenida** |
+|-----------------|--------------|---------------------------|
+| **FileType**    | PNG / JPEG   | Formato real y extensión detectada |
+| **Png**         | PNG          | Chunks pHYs (resolución), gAMA, sRGB |
+| **Jfif**        | JPEG         | DPI declarados en el segmento APP0 |
+| **Exif**        | PNG / JPEG   | DPI de respaldo (segmento APP1) |
+| **Icc**         | PNG / JPEG   | Perfil de color embebido |
+| **Xmp**         | PSD          | Metadatos Adobe (autor, software, fecha) |
+| **Photoshop**   | PSD          | Recursos específicos de Photoshop |
+| **PsdHeader**   | PSD          | **Verdad binaria**: dimensiones, canales, modo de color |
 
-**Dependencias Involucradas:**
-*   `com.google.code.gson:gson`: Serialización profunda para convertir el objeto `Expediente` de manera determinista en un JSON estructurado.
+*Tab. 9. Formatos de Metadatos Analizados*
 
-Como resultado, el servicio consolida un objeto JSON con la siguiente estructura inicial:
+#### 1.2 Firma binaria (Números Mágicos)
+
+Antes de cualquier procesamiento, se leen los primeros bytes del archivo y se comparan contra las firmas hexadecimales conocidas de cada formato, detectando así si los archivos fueron renombrados o adulterados.
+
+```java
+public class NumerosMagicos {
+    // Firmas hexadecimales
+    private static final byte[] PNG_SIGNATURE = {(byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
+    private static final byte[] JPEG_SIGNATURE = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF};
+    private static final byte[] PSD_SIGNATURE = {0x38, 0x42, 0x50, 0x53}; // "8BPS"
+
+    public static String detectarFormatoReal(File archivo) {
+        byte[] encabezado = new byte[8];
+        try (FileInputStream fis = new FileInputStream(archivo)) {
+            if (fis.read(encabezado) < 4) return "DESCONOCIDO";
+            if (compararBytes(encabezado, PSD_SIGNATURE, 4)) return "PSD";
+            if (compararBytes(encabezado, PNG_SIGNATURE, 8)) return "PNG";
+            if (compararBytes(encabezado, JPEG_SIGNATURE, 3)) return "JPEG";
+        } catch (IOException e) {
+            return "ERROR_LECTURA";
+        }
+        return "OTRO";
+    }
+
+    private static boolean compararBytes(byte[] a, byte[] b, int n) {
+        for (int i = 0; i < n; i++) {
+            if (a[i] != b[i]) return false;
+        }
+        return true;
+    }
+}
+```
+
+#### 1.3 Análisis Estructural de la Resolución Física (Imágenes)
+
+Además de la firma binaria, hacemos un análisis estructural de las imágenes que incluye la extracción de la Densidad de Píxeles (DPI) leyendo directamente el flujo de bytes. Esto nos permite auditar la resolución real sin depender exclusivamente de librerías de metadatos, ya que estos pueden ser alterados o simplemente ser inexistentes.
+
+La clase `ResolucionFisica` escanea los chunks estructurales de los archivos PNG (buscando el bloque `pHYs`) y los marcadores de los archivos JPEG (buscando el segmento APP0 / JFIF), extrayendo matemáticamente la resolución base de la ilustración. Esta información nos permite determinar si la imagen proviene de internet, de una captura de pantalla, o si tiene una buena resolución (característica relevante de imágenes exportadas directamente desde un programa de dibujo o diseño).
+
+```java
+public class ResolucionFisica {
+    // Ejemplo de escaneo estructural para formato PNG
+    private static int[] buscarDpiPng(DataInputStream dis) throws IOException {
+        dis.skipBytes(8); // Saltar Firma Binaria del PNG
+        while (dis.available() > 0) {
+            int length = dis.readInt();
+            byte[] type = new byte[4];
+            dis.readFully(type);
+            if ("pHYs".equals(new String(type))) {
+                int x = dis.readInt();
+                int y = dis.readInt();
+                if (dis.readByte() == 1) { // 1 = Unidad en Metros
+                    // Conversión matemática de píxeles/metro a píxeles/pulgada (DPI)
+                    return new int[]{ (int)Math.round(x * 0.0254), (int)Math.round(y * 0.0254) };
+                }
+                break;
+            }
+            dis.skipBytes(length + 4); // Saltar a siguiente chunk (Datos + CRC32)
+        }
+        return new int[]{72, 72}; // Valor web por defecto si no existe bloque pHYs
+    }
+    // ... lógica similar para JPEG (buscando el segmento APP0) ...
+}
+```
+
+#### 1.4 Extracción de la Estructura Interna del PSD (Capas)
+
+Mientras que los metadatos describen el archivo, la **estructura de capas** es lo que realmente demuestra el proceso creativo de una persona. Para analizarlas, el sistema lee el archivo PSD byte a byte utilizando saltos estratégicos (skipExacto) para llegar al bloque relevante como: Layer and Mask Information, donde extrae la posición, opacidad, modos de fusión (blendMode) y efectos adicionales (máscaras, filtros) aplicados a cada capa.
+
+**Ejemplo de análisis de bytes en ExtractorCapasPSD:**
+
+```java
+// ... saltando hasta el bloque de información de capas
+long layerInfoLen = isPsb ? dis.readLong() : readUint32(dis);
+short layerCountRaw = dis.readShort();
+int layerCount = Math.abs(layerCountRaw);
+for (int i = 0; i < layerCount; i++) {
+    // 1. Extraer dimensiones espaciales de la capa (Bounding Box)
+    int top = dis.readInt();
+    int left = dis.readInt();
+    int bottom = dis.readInt();
+    int right = dis.readInt();
+    // 2. Extraer modo de fusión ("norm", "mul", "scrn") y opacidad
+    skipExacto(dis, ...); // Saltar datos de canal
+    skipExacto(dis, 4);   // Firma "8BIM"
+    byte[] blendBytes = new byte[4];
+    dis.readFully(blendBytes);
+    int opacity = dis.readUnsignedByte();
+    // 3. Extraer metadatos adicionales (efectos y tipo de capa)
+    ExtraParseado ep = parsearExtra(extraBytes);
+    capas.add(EstructuraCapaPSD.builder()
+            .nombre(ep.nombre)
+            .blendModeKey(new String(blendBytes).trim())
+            .tieneEfectos(ep.tieneEfectos)
+            .ancho(right - left)
+            .alto(bottom - top)
+            // ...
+            .build());
+}
+```
+
+#### 1.5 Reglas de validación forense
+
+Con la información estructural ya extraída, la arquitectura inyecta una serie de clases que implementan la interfaz `IReglaValidacion`. Cada una de estas reglas analiza un posible fraude basándose en los datos crudos extraídos de la estructura de nuestros archivos analizados.
+
+| **Regla** | **Archivo** | **Detección** |
+|-----------|-------------|---------------|
+| **Firma Estructural** | PNG/JPEG | Formato binario ≠ extensión declarada → fraude |
+| **Coherencia de Resolución** | PNG/JPEG | DPI en metadatos ≠ DPI en bytes → manipulación |
+| **Análisis de Origen** | PNG/JPEG | 72 DPI sin ICC → internet · 90-125 DPI + sRGB → pantalla · ≥300 DPI → válida |
+| **Formato PSD** | PSD | Confirma firma 8BPS en los bytes |
+| **Resolución Profesional** | PSD | DPI < 150 → no apto para impresión |
+| **Imagen Pegada** | PSD | Capa única que cubre el lienzo sin edición técnica → fraude |
+
+*Tab. 10. Reglas Principales de Validación*
+
+Por ejemplo, la regla establecida en: **ReglaImagenPegada** usa la estructura de capas obtenida anteriormente para determinar si una persona simplemente pegó una imagen de internet sin editarla en un archivo PSD, para así pasar desapercibido los requisitos solicitados en la interfaz web. Esta regla demuestra cómo la validación forense se acopla directamente a los resultados del análisis estructural:
+
+```java
+public class ReglaImagenPegada implements IReglaValidacion<ArchivoPSD> {
+    @Override
+    public ResultadoValidacion validar(ArchivoPSD psd) {
+        if (psd.getCapas().size() > 5) {
+            return ResultadoValidacion.builder().esValido(true).mensaje("Estructura compleja detectada.").build();
+        }
+        int lienzoW = psd.getMetadatos().getAnchoImagen();
+        int lienzoH = psd.getMetadatos().getAltoImagen();
+        for (EstructuraCapaPSD capa : psd.getCapas()) {
+            // Si la capa cubre todo el lienzo y no tiene efectos ni modos de fusión
+            if (capa.getAncho() == lienzoW && capa.getAlto() == lienzoH) {
+                if (!capa.isTieneMascaraCapa() && !capa.isTieneEfectos() &&
+                    !capa.isEsClippingMask() && "norm".equals(capa.getBlendModeKey())) {
+                    return ResultadoValidacion.builder()
+                            .esValido(false)
+                            .mensaje("Fraude: Se detectó una capa única que cubre todo el lienzo sin edición técnica.")
+                            .build();
+                }
+            }
+        }
+        return ResultadoValidacion.builder().esValido(true).mensaje("OK").build();
+    }
+}
+```
+
+#### 1.6 Comparación Visual (pHash) y Hashes Criptográficos
+
+Como último paso de nuestro análisis forense, una vez que la estructura y los metadatos han sido validados por las reglas que establecimos, el sistema debe garantizar que la imagen exportada (PNG/JPEG) corresponda visualmente al archivo de trabajo (PSD) entregado, por lo que generamos un *Perceptual Hash (pHash)* de ambos archivos, el cual extrae las características visuales y calcula su grado de similitud algorítmica. El sistema exige un **umbral mínimo del 95%** de similitud, tolerando alteraciones insignificantes, propias de la compresión (como pasar de PSD a JPEG) o por configuraciones de color, pero evitando el fraude de la obra subiendo el archivo fuente de otra.
+
+```java
+// Verificación algorítmica de similitud visual (pHash ≥ 95%)
+double similitud = calcPHash.compararSimilitud(
+    calcPHash.generarHash(imgPSD), calcPHash.generarHash(imgImagen));
+if (similitud < 95.0) {
+    throw new RuntimeException("Rechazado: La imagen exportada no coincide visualmente con el lienzo del PSD (Similitud: " + similitud + "%).");
+}
+// Generación de huellas criptográficas inmutables (SHA-512) para el expediente
+contexto.setSha512PSD(hashPort.calcularSHA512(Files.readAllBytes(psdFile.toPath())));
+contexto.setSha512Imagen(hashPort.calcularSHA512(Files.readAllBytes(imgFile.toPath())));
+```
+
+### Paso 2: Toma de datos adicionales de la obra
+
+Recopilamos los datos más relevantes de la obra (título, descripción, software, hardware y categoría) y las declaraciones del autor (titularidad de derechos y aceptación de términos), construyendo así los objetos de dominio `Autor`, `Obra` y `Declaraciones` que conformarán en la segunda fase del expediente.
+
+```java
+Autor autor = Autor.builder()
+    .nombres(usuarioDb.nombres).apellidos(usuarioDb.apellidos)
+    .cedula(usuarioDb.cedula).correo(usuarioDb.correo).build();
+
+Obra obra = Obra.builder()
+    .titulo((String) body.get("titulo_obra"))
+    .descripcion((String) body.get("descripcion"))
+    .software((String) body.get("software"))
+    .hardware((String) body.get("hardware"))
+    .categoria(cat).fechaCreacion(LocalDate.now()).build();
+```
+
+### Paso 3: Generación del expediente
+
+Con toda la información recopilada en los pasos anteriores, se construye un objeto **Expediente** y se serializa a JSON (pretty-print). Este documento es nuestra fuente de verdad y será firmado por el artista.
+
+```java
+ExpedienteService expedienteServ = new ExpedienteService();
+Expediente expediente = expedienteServ.construir(contexto);
+String expedienteJson = new GsonBuilder()
+    .setPrettyPrinting().create().toJson(expediente);
+```
+
+**Ejemplo de JSON del expediente generado:**
+
 ```json
 {
-  "idExpediente": "EXP-2026-000001",
-  "autor": { "nombres": "Artista", "cedula": "0000000000" },
-  "obra": { "titulo": "Obra de Integracion", "categoria": "ILUSTRACION" },
-  "analisis": { "resultado": "APROBADO", "capasPSD": 123 },
+  "idExpediente": "EXP-2026-000047",
+  "fechaRegistro": "2026-06-30T23:00:00Z",
+  "autor": {
+    "nombres": "María Fernanda",
+    "apellidos": "Lozano Vega",
+    "cedula": "1723456789",
+    "correo": "mflozano@gmail.com",
+    "seudonimo": "MFArt"
+  },
+  "obra": {
+    "titulo": "Colibrí Digital",
+    "descripcion": "Ilustración digital de fauna andina del Ecuador",
+    "software": "Adobe Photoshop 2024",
+    "hardware": "Wacom Intuos Pro",
+    "categoria": "ILUSTRACION",
+    "fechaCreacion": "2026-06-30"
+  },
+  "analisis": {
+    "resultado": "APROBADO",
+    "capasPSD": 24,
+    "metadatosDetectados": true,
+    "dimensiones": "3508x4961 px",
+    "detallesTecnicos": "DPI: 300 | Modo color: RGB | Similitud pHash: 98.7%"
+  },
   "hashes": {
-    "sha512PSD": "0e971e9a0b...",
-    "sha512Imagen": "e70561311...",
-    "pHash": "000000010011..."
+    "sha512PSD": "a3f1c8e2b74d...9f2e01c",
+    "sha512Imagen": "d92b47fa1c3e...8a10d7b",
+    "pHash": "f8c0e3a1b5d27490"
   }
 }
 ```
 
----
+### Paso 4: Firma del expediente con el certificado del artista
 
-### Fase 3: Firma del Expediente y Almacenamiento
-
-Una vez estructurado el expediente, se procede a su firma criptográfica. 
-
-```mermaid
-graph TD
-    A[Expediente JSON Crudo] --> B[Leer Clave Privada P12 del Artista]
-    B --> C[Aplicar Cifrado SHA-512 RSA]
-    C --> D[Generar Firma en Base64]
-    D --> E[Empaquetar JSON Crudo + Firma Base64]
-    E --> F[Crear Archivo EXP-firmado.json]
-```
-
-**Manejo del `.p12` (Zero-File Retention):**
-El archivo `.p12` se solicita en la petición, **se aloja temporalmente en memoria**, se extrae la clave, se realiza la firma y luego **se destruye inmediatamente**, sin almacenarse jamás en el servidor.
-
-**Criptografía y SHA-512:**
-El algoritmo usado es `SHA512withRSA`. **SHA-512** es netamente superior a SHA-256 porque incrementa el espacio de colisión exponencialmente, haciendo que la falsificación de la evidencia forense sea computacionalmente inviable.
-
-**Dependencias Involucradas:**
-*   `java.security.*`: Para instanciar `KeyStore` y `Signature`.
-*   `org.bouncycastle`: Proveedor de seguridad reforzado.
+El JSON del expediente es firmado digitalmente usando el archivo .p12 del artista, recuperado a través de la **[API de gestión de claves de usuarios]**. Se aplica el algoritmo SHA512withRSA: el hash SHA-512 del JSON se cifra con la clave privada de la artista extraída del keystore PKCS#12. El resultado vincula legalmente al autor con el contenido exacto del expediente (no repudio).
 
 ```java
-// Fragmento de validación de firma en FirmadorP12Adapter (En Memoria)
-KeyStore keystore = KeyStore.getInstance("PKCS12");
-keystore.load(new FileInputStream(p12File), password.toCharArray());
-String alias = keystore.aliases().nextElement();
-X509Certificate cert = (X509Certificate) keystore.getCertificate(alias);
-cert.checkValidity(); // Lanzará excepción si expiró (Pero NO consulta OCSP/CRL)
+// Comunicación con el adaptador de firma → API .p12 del usuario
+FirmadorExpedientePort firmadorExp = new FirmadorP12Adapter();
+FirmaAutorService firmaServ = new FirmaAutorService(firmadorExp);
+firmaServ.validar(p12File, password); // Valida que el .p12 sea legítimo
+FirmaAutor firma = firmaServ.firmar(expedienteJson, p12File, password);
+// Resultado: firma SHA512withRSA del expediente, codificada en Base64
 ```
 
-Al guardar el expediente, se genera un "Wrapper" firmado:
+### Paso 5: Generación del certificado PDF y adjunto de datos
+
+Se genera un PDF del certificado (utilizando plantillas Thymeleaf y html2pdf), el cual incluye visualmente los datos de la obra, su autor y un código QR con información relevante. El JSON del expediente firmado por el autor se **incrusta físicamente dentro de la estructura interna del archivo PDF como un archivo adjunto** (`expediente-firmado.json`). Además, se inyecta XMP Metadata en el documento para su correcta indexación.
+
+```java
+// Contenido a certificar: expediente JSON + firma del autor en Base64
+String expedienteFirmadoJson = expedienteJson + "\n---FIRMA---\n" + firma.getFirmaBase64();
+
+// 1. Generación del documento visual PDF
+PdfDocument pdf = new PdfDocument(writer);
+
+// 2. Inserción del JSON firmado como un archivo incrustado en el PDF
+PdfFileSpec adjunto = PdfFileSpec.createEmbeddedFileSpec(
+    pdf,
+    expedienteFirmadoJson.getBytes(StandardCharsets.UTF_8),
+    "Expediente Firmado Verisart",
+    "expediente-firmado.json",
+    null,
+    new PdfName("application/json")
+);
+pdf.addFileAttachment("expediente-firmado.json", adjunto);
+
+// 3. Inserción de metadatos XMP y propiedades del documento
+PdfDocumentInfo info = pdf.getDocumentInfo();
+info.setTitle("Certificado Verisart --- " + certificado.getIdCertificado());
+info.setSubject("Certificado de Autenticidad Digital");
+info.setKeywords("idCertificado=" + certificado.getIdCertificado()
+    + "; idExpediente=" + certificado.getIdExpediente()
+    + "; hash=" + certificado.getHashExpedienteFirmado());
+info.setCreator("Sistema Verisart --- UCE");
+```
+
+Además del archivo adjunto (que es lo más crítico), **en la propia metadata del archivo PDF (XMP / Propiedades del documento)** se insertan los siguientes datos estándar:
+
+- **Título (Title):** El nombre oficial, ej. Certificado Verisart --- CERT-2026-000047.
+- **Asunto (Subject):** Certificado de Autenticidad Digital.
+- **Palabras Clave (Keywords):** Contiene la tríada de verificación inmutable: `idCertificado`, `idExpediente` y el hash criptográfico del expediente.
+- **Creador (Creator):** Sistema Verisart --- UCE.
+
+**Ejemplo del texto exacto que se inserta como adjunto (`expediente-firmado.json`):**
+
+El contenido incrustado es la concatenación del JSON del expediente y la firma criptográfica en Base64, que se encuentran separados por la cadena `---FIRMA---`, para facilitar su separación y análisis comparatorio. Este es el contenido exacto que un auditor vería si extrae el archivo adjunto del PDF:
+
 ```json
 {
-  "expedienteJson": "{\"idExpediente\":\"EXP-1\", ... }",
-  "firmaBase64": "vjB3x/Q8aL9kF3... (Firma SHA512withRSA del autor)"
+  "idExpediente": "EXP-2026-000047",
+  "fechaRegistro": "2026-06-30T23:00:00Z",
+  "autor": {
+    "nombres": "María Fernanda",
+    "apellidos": "Lozano Vega",
+    "cedula": "1723456789",
+    "correo": "mflozano@gmail.com",
+    "seudonimo": "MFArt"
+  },
+  "obra": {
+    "titulo": "Colibrí Digital",
+    "descripcion": "Ilustración digital de fauna andina del Ecuador",
+    "software": "Adobe Photoshop 2024",
+    "hardware": "Wacom Intuos Pro",
+    "categoria": "ILUSTRACION",
+    "fechaCreacion": "2026-06-30"
+  },
+  "analisis": {
+    "resultado": "APROBADO",
+    "capasPSD": 24,
+    "metadatosDetectados": true,
+    "dimensiones": "3508x4961 px",
+    "detallesTecnicos": "DPI: 300 | Modo color: RGB | Similitud pHash: 98.7%"
+  },
+  "hashes": {
+    "sha512PSD": "a3f1c8e2b74d49b531...9f2e01c",
+    "sha512Imagen": "d92b47fa1c3e03...8a10d7b",
+    "pHash": "f8c0e3a1b5d27490"
+  }
+}
+---FIRMA---
+MIICdgYJKoZIhvcNAQcCoIICZzCCAmMCAQExCzAJBgUrDgMCGgUAMAsGCSqGSIb3DQEHATGCAY0w
+ggGJAgEBMIGhMIGbMQswCQYDVQQGEwJFQzEQMA4GA1UECAwHUGljaGluY2hhMREwDwYDVQQHDAhR
+dWl0bzENMAsGA1UECgwEVUNFMQ4wDAYDVQQLDAVGRVZDMSEwHwYDVQQDDBhDZXJ0aWZpY2Fkb3Ig
+Rm9yZW5zZSBVUEUxIjAgBgkqhkiG9w0BCQEWE2FkbWluQGNlcnRpZmljYS5lYwIJAKK1...
+```
+
+**Verificación de la inserción**
+
+Para comprobar que el sistema backend en Java está insertando correctamente este JSON en el PDF generado, se desarrolló un proyecto de prueba en Python (explicado en la sección pruebas más adelante). Este código extrae el adjunto para validar que la información viaja correctamente con el archivo.
+
+### Paso 6: Inserción de JSON en la metadata estructural de la imagen
+
+El sistema **no modifica los píxeles de la imagen, porque se debe respetar la integridad visual de la obra**. En su lugar, aprovecha los mecanismos de extensión propios de cada formato de imagen para insertar datos directamente en la estructura binaria del archivo.
+
+**El Payload (JSON) insertado en las imágenes**
+
+Es importante destacar que **el JSON inyectado en las imágenes es totalmente distinto al del PDF.** Mientras que el archivo adjunto del PDF almacena el "expediente completo" junto con la firma criptográfica en Base64, la imagen almacena únicamente un pequeño *payload esteganográfico*. No inyectamos el expediente JSON completo porque incrementaríamos el peso de la imagen, además de exceder la capacidad de ciertos bloques estructurales. Por lo tanto, en la imagen solo insertamos el identificador y la huella inmutable del expediente, que es nada más que el **Hash SHA-512 del expediente completo firmado, que ya generamos antes:**
+
+```json
+{
+  "id": "CERT-2026-000047",
+  "hash": "d92b47fa1c3e...8a10d7b"
 }
 ```
 
----
+A continuación, detallaremos cómo se almacena este payload en los diferentes formatos de imagen que puede manejar nuestro sistema:
 
-### Fase 4: Emisión del Certificado
+#### En archivos PNG — Chunk tEXt personalizado
 
-El último paso corresponde a la generación documental. Se inyectan las variables al PDF vía **Thymeleaf + iText 7**. Finalmente, si el archivo es PNG/JPEG, se aplica esteganografía.
+El formato PNG está compuesto por una secuencia de **chunks** (bloques de datos). El sistema inserta un chunk de tipo `tEXt` con la clave `verisart-cert`, ubicándolo justo antes del chunk de cierre IEND. Cada chunk incluye su propio **CRC32** para verificar integridad.
 
-```mermaid
-graph TD
-    A[Datos del Expediente] --> B[Mapear a Plantilla HTML Thymeleaf]
-    B --> C[Convertir HTML a PDF Básico]
-    C --> D[Incrustar Archivo JSON internamente]
-    D --> E[Leer Clave Pública Institucional CA]
-    E --> F[Firmar PDF Digitalmente PADES]
-    F --> G[Obtener Certificado PDF Final]
+```java
+// Construir el chunk tEXt con CRC32
+String contenido = "verisart-cert\0" + jsonCertificacion;
+byte[] datos = contenido.getBytes(StandardCharsets.ISO_8859_1);
+CRC32 crc = new CRC32();
+crc.update("tEXt".getBytes());
+crc.update(datos);
+// Ensamblar: imagen original hasta IEND + nuevo chunk + IEND
+baos.write(imagenOriginal, 0, posicionIEND); // todo antes del cierre
+baos.write(chunkData);                       // chunk con el JSON
+baos.write(imagenOriginal, posicionIEND, imagenOriginal.length - posicionIEND);
 ```
 
-#### ¿Qué se inserta en la imagen (PNG y JPEG)?
-**NO se inserta todo el expediente** para no corromper la imagen. Se inyecta un JSON miniatura: `{"id":"CERT-12345", "hash":"a1b2c3d4..."}`.
+#### En archivos JPEG — Segmento APP11 (0xFF 0xEB)
 
-*   **En PNG:** Se inyecta un chunk `tEXt` justo antes del marcador `IEND`.
-*   **En JPEG:** Se inyecta un segmento `APP11` justo después del marcador `SOI`.
+El formato JPEG usa segmentos marcados. El sistema inserta un segmento en APP11 (marcador FF EB), el cual está reservado para uso privado y separado del segmento APP1 donde reside el EXIF, inmediatamente después del marcador de inicio SOI (FF D8).
 
-#### ¿Qué se inserta en el Certificado (PDF)?
-El PDF recibe 3 niveles de seguridad pesada:
-
-1.  **A nivel visual:** Textos legibles y el Código QR de validación.
-2.  **A nivel binario (Archivo Adjunto):** El sistema **incrusta literalmente el archivo `expediente-firmado.json` íntegro** dentro de la estructura del PDF (Nivel 2). Esto asegura que la firma legal del artista viaje permanentemente con el certificado.
-3.  **A nivel criptográfico:** El archivo PDF completo es envuelto y firmado digitalmente (PADES - CMS) usando la clave privada institucional (`root_ca.p12`).
-
-```mermaid
-graph TD
-    subgraph "Contenedor PDF Generado"
-        A[Capa Visual: Diseño A4 + QR] 
-        B[Capa Búsqueda: Metadatos XMP Nivel 1]
-        C[Capa Datos: JSON Adjunto Nivel 2]
-    end
-    
-    subgraph "Sello Criptográfico PADES"
-        D{Firma Institucional root_ca.p12}
-    end
-    
-    A & B & C -->|Envuelto y Sellado Criptográficamente por| D
-    
-    style D fill:#2ecc71,stroke:#27ae60,stroke-width:4px,color:#fff
+```java
+// SOI original (primeros 2 bytes intactos)
+baos.write(imagenOriginal, 0, 2);
+// Insertar APP11 (FF EB) con el JSON prefijado
+baos.write(0xFF);
+baos.write(0xEB);                  // marcador APP11
+baos.write((longitudSegmento >> 8) & 0xFF);  // longitud alta
+baos.write(longitudSegmento & 0xFF);         // longitud baja
+baos.write(("verisart-cert:" + json).getBytes(StandardCharsets.UTF_8));
+// Resto del JPEG sin modificar
+baos.write(imagenOriginal, 2, imagenOriginal.length - 2);
 ```
 
-```text
-Estructura Binaria del Certificado PDF Firmado:
-┌─────────────────────────────────────────┐
-│ %PDF-1.7 (Cabecera)                     │
-├─────────────────────────────────────────┤
-│ Catalog (Catálogo Raíz del Documento)   │
-│  ├─ Pages (Capa Visual A4, QR)          │
-│  ├─ Metadata XMP (Nivel 1)              │ ◄── [ INYECCIÓN: Keywords y Hash ]
-│  └─ EmbeddedFiles (Nivel 2)             │
-│      └─ [ INYECCIÓN: expediente-firmado.json ]
-├─────────────────────────────────────────┤
-│ Diccionario de Firma (Nivel 3)          │ ◄── (Añadido por PADES SHA-512)
-│  └─ [ Sello Criptográfico CMS/PKCS7 ]   │
-├─────────────────────────────────────────┤
-│ %EOF (Fin de Archivo)                   │
-└─────────────────────────────────────────┘
+**Verificación de la inserción en imágenes**
+
+Al igual que el PDF, para comprobar de forma simple que nuestro sistema en Java está inyectando correctamente el JSON sin corromper la imagen, en el mismo proyecto de prueba en Python (explicado en la sección pruebas más adelante), lee los bytes de la imagen para asegurar que el *payload* se insertó en el lugar correcto.
+
+### Paso 7: Sellado del PDF con firma institucional (PAdES) y empaquetado final
+
+El PDF del certificado (que ya contiene el expediente completo en formato JSON incrustado y firmado por el autor) es sellado criptográficamente con el certificado raíz institucional (Root CA) **[mediante la API del sistema]**. Se utiliza el estándar **PAdES** (*PDF Advanced Electronic Signatures*), que incrusta la firma dentro del propio PDF. Cualquier alteración posterior al sellado invalida automáticamente la firma.
+
+```java
+// Comunicación con el adaptador de firma institucional
+FirmadorPDFPort firmadorPDF = new FirmadorPDFAdapter(RUTA_ROOT_CA);
+byte[] pdfFirmado = firmadorPDF.firmarPDF(pdfSinFirmar, PASS_CA); // Sello institucional
 ```
 
-El flujo de confianza funciona de la siguiente manera: Si alguien tiene la imagen certificada, extrae el texto oculto (`id` y `hash`). Luego, extrae el JSON adjunto del PDF, recalcula su hash SHA-512 y lo compara con el `hash` oculto esteganográficamente en la imagen. Si ambos hashes son idénticos, la imagen y el expediente están criptográficamente vinculados.
+Para finalizar todo el material se **empaqueta en un archivo .zip** que se entrega al usuario final. Este paquete contiene tanto la obra certificada (con el JSON inyectado en su estructura) como el PDF del certificado firmado por el sistema (con el expediente del autor incrustado).
+
+```java
+// Generación del paquete ZIP descargable
+ByteArrayOutputStream baosZip = new ByteArrayOutputStream();
+ZipOutputStream zos = new ZipOutputStream(baosZip);
+
+// 1. Añadir el certificado PDF firmado
+ZipEntry pdfEntry = new ZipEntry(certificado.getIdCertificado() + ".pdf");
+zos.putNextEntry(pdfEntry);
+zos.write(pdfFirmado);
+zos.closeEntry();
+
+// 2. Añadir la imagen final certificada (con el JSON estructural)
+String imgExt = rutaImagen.endsWith(".jpg") ? ".jpg" : ".png";
+ZipEntry imgEntry = new ZipEntry(certificado.getIdCertificado() + "-obra-certificada" + imgExt);
+zos.putNextEntry(imgEntry);
+zos.write(imagenCertificada);
+zos.closeEntry();
+
+zos.close();
+return baosZip.toByteArray(); // Retorna los bytes del archivo .zip
+```

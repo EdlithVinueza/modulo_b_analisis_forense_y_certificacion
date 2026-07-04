@@ -129,13 +129,15 @@ public class CertificacionResource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     public Response descargarCertificado(@PathParam("id") String idExpediente) {
         try {
-            byte[] zipBytes = orchestrator.emitirCertificadoFase4(idExpediente);
+            byte[] zipBytes = orchestrator.obtenerZipYLimpiar(idExpediente);
 
             return Response.ok(zipBytes)
                     .header("Content-Disposition", "attachment; filename=\"Expediente_Forense_" + idExpediente + ".zip\"")
                     .build();
         } catch (Exception e) {
+            e.printStackTrace(); // Log the exact error to the terminal
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .type(MediaType.TEXT_PLAIN)
                     .entity("Error al generar el ZIP: " + e.getMessage())
                     .build();
         }

@@ -10,6 +10,13 @@ import java.util.Iterator;
 
 public class ImageLoader {
 
+    static {
+        // Desactiva el uso de disco (caché temporal) para ImageIO,
+        // usando memoria RAM directamente. Esto acelera drásticamente
+        // el procesamiento de imágenes sin usar multihilo y sin alterar los píxeles (hashes).
+        ImageIO.setUseCache(false);
+    }
+
     /**
      * Carga una imagen o composite de PSD usando submuestreo agresivo (subsampling)
      * si las dimensiones son grandes, evitando allocations masivos en memoria RAM.

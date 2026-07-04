@@ -29,7 +29,8 @@ public class ExpedienteForenseEntity extends PanacheEntityBase {
     @Column(name = "resultado_analisis", nullable = false, length = 50)
     public String resultadoAnalisis;
 
-    @Column(name = "evidencia_tecnica", nullable = false, columnDefinition = "TEXT")
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+    @Column(name = "evidencia_tecnica", nullable = false)
     public String evidenciaTecnicaJson;
 
     @Column(name = "fecha_analisis")
