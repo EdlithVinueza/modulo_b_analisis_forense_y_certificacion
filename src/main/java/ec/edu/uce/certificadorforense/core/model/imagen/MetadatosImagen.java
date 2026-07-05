@@ -27,6 +27,9 @@ public class MetadatosImagen {
     private String tipoMime;
     private String extensionReal;
 
+    // [5. Metadatos Extra]
+    private String software;
+
     public double getDpiCalculado() {
         if (pixelesPorUnidadX <= 0) return 72.0; // Si no hay dato, es resolución web estándar
         if ("Metres".equalsIgnoreCase(unidadFisica)) {

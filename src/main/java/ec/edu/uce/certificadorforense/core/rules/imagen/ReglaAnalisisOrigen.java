@@ -27,12 +27,15 @@ public class ReglaAnalisisOrigen implements IReglaValidacion<ArchivoImagen> {
             }
         }
 
-        // 2. DETECCIÓN DE IMAGEN DE INTERNET (72 DPI + Sin Perfil ICC)
-        if (dpi == 72.0 && !img.getMetadatos().isTienePerfilIcc()) {
+        // 2. DETECCIÓN DE IMAGEN DE INTERNET (Baja resolución y sin huella de software)
+        // Redes sociales como Pinterest o Facebook borran la etiqueta 'Software' y bajan la resolución.
+        boolean sinSoftware = (img.getMetadatos().getSoftware() == null || img.getMetadatos().getSoftware().isBlank());
+        
+        if (dpi <= 96.0 && (sinSoftware || !img.getMetadatos().isTienePerfilIcc())) {
             return ResultadoValidacion.builder()
                     .nombreRegla("Análisis Forense de Origen")
                     .esValido(false)
-                    .mensaje("VEREDICTO: IMAGEN DE INTERNET. Resolución optimizada para web y sin gestión de color.")
+                    .mensaje("VEREDICTO: IMAGEN DE INTERNET. Resolución baja/web y sin metadatos de autoría original (Software o Perfil ICC ausente).")
                     .build();
         }
 

@@ -69,7 +69,7 @@ public class CertificacionOrchestrator {
     private final String RUTA_ROOT_CA = "/home/edlith/Documentos/UCE 26-26/TESIS/CLAVES LINUX/sistema_certificado/sistema.p12";
     private final String PASS_CA = "ClaveSistema2026!";
 
-    public String iniciarAnalisisFase1(File psdFile, File imgFile, String extension) throws Exception {
+    public Map<String, String> iniciarAnalisisFase1(File psdFile, File imgFile, String extension) throws Exception {
         GeneradorHashPort hashPort = new SHA512Adapter();
 
         List<ArchivoProcessorPort<? extends ArchivoBase>> procesadores = Arrays.asList(
@@ -126,11 +126,35 @@ public class CertificacionOrchestrator {
             contexto.setSha512PSD(hashPort.calcularSHA512(psdFile));
             contexto.setSha512Imagen(hashPort.calcularSHA512(imgFile));
 
+            // Verificar Duplicados (Lógica de Conflicto de Propiedad y Recuperación)
+            ExpedienteForenseEntity expAnterior = ExpedienteForenseEntity.find("hashImagenFinal", contexto.getSha512Imagen()).firstResult();
+            if (expAnterior == null) {
+                expAnterior = ExpedienteForenseEntity.find("hashPsdOriginal", contexto.getSha512PSD()).firstResult();
+            }
+
+            if (expAnterior != null && ("CERTIFICADO".equals(expAnterior.obra.estadoActual) || "FINALIZADO".equals(expAnterior.obra.estadoActual))) {
+                // Hay un duplicado. Devolvemos un estado especial para pedir la cédula en el frontend.
+                Map<String, String> resultado = new HashMap<>();
+                resultado.put("estado", "REQUIERE_CEDULA");
+                resultado.put("hash_duplicado", contexto.getSha512Imagen());
+                return resultado;
+            }
+
             contexto.getEstadoActual().avanzar(contexto);
 
             contextoCache.put(expedienteId, contexto);
 
-            return expedienteId;
+            Map<String, String> resultado = new HashMap<>();
+            resultado.put("expediente_id", expedienteId);
+            
+            // Buscar software en PSD o Imagen
+            if (psd.getMetadatos() != null && psd.getMetadatos().getSoftware() != null) {
+                resultado.put("software_detectado", psd.getMetadatos().getSoftware());
+            } else if (imagen.getMetadatos() != null && imagen.getMetadatos().getSoftware() != null) {
+                resultado.put("software_detectado", imagen.getMetadatos().getSoftware());
+            }
+
+            return resultado;
         } finally {
             // Borrar archivos temporales de fase 1
             try { Files.deleteIfExists(psdFile.toPath()); } catch (Exception ignored) {}

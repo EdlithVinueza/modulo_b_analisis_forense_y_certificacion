@@ -16,6 +16,11 @@ public class Exif implements MetadataExtractor<MetadatosImagen.MetadatosImagenBu
                 builder.pixelesPorUnidadX(res);
                 builder.unidadFisica("Inches");
             }
+
+            String software = ifd0.getString(ExifIFD0Directory.TAG_SOFTWARE);
+            if (software != null && !software.isBlank()) {
+                builder.software(software);
+            }
         }
     }
 }

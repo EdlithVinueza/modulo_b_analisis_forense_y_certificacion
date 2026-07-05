@@ -26,6 +26,9 @@ public class CertificacionResource {
     @Inject
     CertificacionOrchestrator orchestrator;
 
+    @Inject
+    ec.edu.uce.certificadorforense.application.service.RecuperacionCertificadoService recuperacionService;
+
     @POST
     @Path("/init")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
@@ -53,15 +56,62 @@ public class CertificacionResource {
                 ext = "jpg";
             }
 
-            String expedienteId = orchestrator.iniciarAnalisisFase1(psd, img, ext);
+            Map<String, String> result = orchestrator.iniciarAnalisisFase1(psd, img, ext);
 
-            Map<String, String> response = new HashMap<>();
-            response.put("expediente_id", expedienteId);
-            response.put("estado", "ANALIZADO");
+            Map<String, String> response = new HashMap<>(result);
+            response.putIfAbsent("estado", "ANALIZADO");
             
             return Response.ok(response).build();
         } catch (Exception e) {
             return errorResponse(e.getMessage());
+        }
+    }
+
+    @POST
+    @Path("/recuperar")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    public Response recuperarCertificado(@RestForm("imagen") FileUpload imagenFile,
+                                         @RestForm("hash_duplicado") String hashDuplicado,
+                                         @RestForm("cedula") String cedula) {
+        try {
+            if (imagenFile == null || hashDuplicado == null || cedula == null) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .type(MediaType.TEXT_PLAIN)
+                        .entity("Faltan datos para la recuperación (imagen, hash o cédula).")
+                        .build();
+            }
+
+            java.nio.file.Path tempImg = Files.createTempFile("forense-rec-", "-" + imagenFile.fileName());
+            Files.copy(imagenFile.uploadedFile(), tempImg, StandardCopyOption.REPLACE_EXISTING);
+            File img = tempImg.toFile();
+
+            String ext = "png";
+            if(imagenFile.fileName().toLowerCase().endsWith(".jpg") || imagenFile.fileName().toLowerCase().endsWith(".jpeg")) {
+                ext = "jpg";
+            }
+
+            byte[] zipBytes = recuperacionService.recuperarCertificadoLocalmente(hashDuplicado, cedula, img, ext);
+
+            // Borrar archivo temporal
+            try { Files.deleteIfExists(img.toPath()); } catch (Exception ignored) {}
+
+            return Response.ok(zipBytes)
+                    .header("Content-Disposition", "attachment; filename=\"Expediente_Recuperado.zip\"")
+                    .build();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (e.getMessage().contains("ConflictoPropiedadException")) {
+                return Response.status(Response.Status.CONFLICT)
+                        .type(MediaType.TEXT_PLAIN)
+                        .entity(e.getMessage())
+                        .build();
+            }
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                    .type(MediaType.TEXT_PLAIN)
+                    .entity("Error en la recuperación: " + e.getMessage())
+                    .build();
         }
     }
 
