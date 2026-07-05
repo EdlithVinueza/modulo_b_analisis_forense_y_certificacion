@@ -54,9 +54,16 @@ public class ImageLoader {
             BufferedImage img = reader.read(0, param);
             reader.dispose();
             if (img == null) throw new RuntimeException("Lector de imagen retornó nulo.");
+            
+            validarTransparencia(img);
             return img;
 
         } catch (Exception e) {
+            // Si la excepcion ya es de validacion forense, la propagamos directamente
+            if (e.getMessage() != null && e.getMessage().contains("validación forense")) {
+                throw new RuntimeException(e.getMessage());
+            }
+            
             System.err.println("Advertencia en carga optimizada de " + file.getName() + ": " + e.getMessage());
             // Fallback final a carga estándar
             try {
@@ -64,10 +71,36 @@ public class ImageLoader {
                 if (imgFallback == null) {
                     throw new RuntimeException("ImageIO.read retornó nulo, formato no soportado o archivo corrupto.");
                 }
+                
+                validarTransparencia(imgFallback);
                 return imgFallback;
             } catch (Exception ex) {
+                // Si la excepcion ya es de validacion forense, la propagamos
+                if (ex.getMessage() != null && ex.getMessage().contains("validación forense")) {
+                    throw new RuntimeException(ex.getMessage());
+                }
                 System.err.println("Fallo absoluto cargando imagen: " + ex.getMessage());
                 throw new RuntimeException("Error crítico al leer los píxeles de " + file.getName() + ": " + ex.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Escanea los píxeles de la imagen. Si detecta transparencias (Alpha < 255), lanza una excepción
+     * para bloquear el proceso por razones de integridad forense.
+     */
+    private static void validarTransparencia(BufferedImage img) {
+        if (img != null && img.getColorModel().hasAlpha()) {
+            int width = img.getWidth();
+            int height = img.getHeight();
+            // Escaneo a nivel de píxel
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    int alpha = (img.getRGB(x, y) >> 24) & 0xff;
+                    if (alpha < 255) {
+                        throw new RuntimeException("Error de validación forense: La obra contiene transparencias. Para garantizar la integridad criptográfica entre el archivo fuente (PSD) y la imagen final, la obra debe tener una capa de fondo sólida (ej. blanca).");
+                    }
+                }
             }
         }
     }

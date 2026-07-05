@@ -14,7 +14,11 @@ public class ReglaComplejidadDiseno implements IReglaValidacion<ArchivoPSD> {
         long conTrabajo = psd.getCapas().stream().filter(c ->
                 c.isTieneMascaraCapa() || c.isTieneEfectos() || c.isEsClippingMask() ||
                         c.getTipo() == EstructuraCapaPSD.Tipo.TEXTO || !"norm".equals(c.getBlendModeKey()) ||
-                        c.getOpacidadRaw() < 255
+                        c.getOpacidadRaw() < 255 ||
+                        // Consideramos "trabajo artístico" a una capa que no está vacía y cuyo contenido
+                        // (bounding box) no abarca exactamente todo el lienzo (lo que indica que son trazos o dibujos).
+                        (c.getAncho() > 0 && c.getAlto() > 0 && 
+                        (c.getAncho() < psd.getMetadatos().getAnchoImagen() || c.getAlto() < psd.getMetadatos().getAltoImagen()))
         ).count();
 
         boolean esValido;

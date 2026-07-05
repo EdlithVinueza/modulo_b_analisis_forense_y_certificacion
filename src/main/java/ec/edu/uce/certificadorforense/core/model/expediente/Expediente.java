@@ -48,4 +48,7 @@ public class Expediente {
 
     /** Huellas criptográficas y perceptuales de los archivos de evidencia. */
     private final HashesEvidencia hashes;
+
+    /** Todos los metadatos crudos extraídos de la imagen y el PSD (EXIF, XMP, IPTC, etc). */
+    private final java.util.Map<String, String> metadatosCrudos;
 }

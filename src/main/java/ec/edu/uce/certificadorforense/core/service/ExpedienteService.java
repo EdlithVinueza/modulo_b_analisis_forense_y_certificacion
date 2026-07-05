@@ -64,6 +64,7 @@ public class ExpedienteService {
                 .obra(contexto.getObra())
                 .analisis(analisis)
                 .hashes(hashes)
+                .metadatosCrudos(contexto.getArchivoImagen() != null && contexto.getArchivoImagen().getMetadatos() != null ? contexto.getArchivoImagen().getMetadatos().getMetadatosCrudos() : null)
                 .build();
     }
 

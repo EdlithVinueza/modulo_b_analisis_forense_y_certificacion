@@ -29,6 +29,7 @@ public class MetadatosImagen {
 
     // [5. Metadatos Extra]
     private String software;
+    private java.util.Map<String, String> metadatosCrudos;
 
     public double getDpiCalculado() {
         if (pixelesPorUnidadX <= 0) return 72.0; // Si no hay dato, es resolución web estándar

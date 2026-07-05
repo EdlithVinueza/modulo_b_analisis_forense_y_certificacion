@@ -33,6 +33,9 @@ public class VaultSealAdapter {
     @Inject 
     SecretClient secretClient; // Cliente de Azure Key Vault
 
+    @org.eclipse.microprofile.config.inject.ConfigProperty(name = "tesis.cert.name")
+    String certName;
+
     static {
         if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) == null) {
             Security.addProvider(new BouncyCastleProvider());
@@ -43,7 +46,7 @@ public class VaultSealAdapter {
         try {
             log.info("Recuperando el sello institucional protegido en la nube de Azure...");
             // Recupera el secreto que está en Azure Key Vault
-            KeyVaultSecret secret = secretClient.getSecret("system-certificadora-obras");
+            KeyVaultSecret secret = secretClient.getSecret(certName);
             byte[] p12Bytes = Base64.getDecoder().decode(secret.getValue());
 
             log.info("Aplicando sello institucional recuperado de HSM Azure directamente en memoria...");

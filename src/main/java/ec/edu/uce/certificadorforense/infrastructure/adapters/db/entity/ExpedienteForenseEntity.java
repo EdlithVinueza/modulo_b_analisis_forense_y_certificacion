@@ -23,6 +23,9 @@ public class ExpedienteForenseEntity extends PanacheEntityBase {
     @Column(name = "hash_imagen_final", nullable = false, columnDefinition = "TEXT")
     public String hashImagenFinal;
 
+    @Column(name = "phash_imagen_string", length = 64)
+    public String phashImagenString;
+
     @Column(name = "similitud_phash", precision = 5, scale = 2)
     public BigDecimal similitudPhash;
 

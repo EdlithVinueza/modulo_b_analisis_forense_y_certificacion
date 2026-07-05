@@ -26,13 +26,16 @@ public class ArchivoPSDProcessor implements ArchivoProcessorPort<ArchivoPSD> {
             throw new IllegalArgumentException("El archivo es inválido o no existe.");
         }
 
-        // 1. Extraer metadatos
-        MetadatosPSD metadatos = metadatosService.procesarArchivo(file);
+        // Extraer metadatos y capas estructurales en paralelo
+        java.util.concurrent.CompletableFuture<MetadatosPSD> futureMetadatos = java.util.concurrent.CompletableFuture.supplyAsync(() -> metadatosService.procesarArchivo(file));
+        java.util.concurrent.CompletableFuture<List<EstructuraCapaPSD>> futureCapas = java.util.concurrent.CompletableFuture.supplyAsync(() -> ExtractorCapasPSD.extraer(file.getAbsolutePath()));
 
-        // 2. Extraer capas estructurales reales por stream parcial
-        List<EstructuraCapaPSD> capas = ExtractorCapasPSD.extraer(file.getAbsolutePath());
+        java.util.concurrent.CompletableFuture.allOf(futureMetadatos, futureCapas).join();
 
-        // 3. Fusionar en el objeto del dominio
+        MetadatosPSD metadatos = futureMetadatos.join();
+        List<EstructuraCapaPSD> capas = futureCapas.join();
+
+        // Fusionar en el objeto del dominio
         return ArchivoPSD.builder()
                 .nombreArchivo(file.getName())
                 .rutaAbsoluta(file.getAbsolutePath())

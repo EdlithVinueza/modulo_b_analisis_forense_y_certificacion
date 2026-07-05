@@ -32,6 +32,14 @@ public class MetadatosImagenService {
 
         try {
             Metadata metadata = ImageMetadataReader.readMetadata(archivo);
+            
+            java.util.Map<String, String> metadatosCrudos = new java.util.HashMap<>();
+            for (com.drew.metadata.Directory directory : metadata.getDirectories()) {
+                for (com.drew.metadata.Tag tag : directory.getTags()) {
+                    metadatosCrudos.put(directory.getName() + " - " + tag.getTagName(), tag.getDescription());
+                }
+            }
+            builder.metadatosCrudos(metadatosCrudos);
 
             for (MetadataExtractor<MetadatosImagen.MetadatosImagenBuilder> extractor : extractores) {
                 try {
