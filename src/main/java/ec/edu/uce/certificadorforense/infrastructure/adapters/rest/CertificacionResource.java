@@ -117,6 +117,7 @@ public class CertificacionResource {
 
     @PUT
     @Path("/{id}/datos")
+    @jakarta.transaction.Transactional
     public Response enviarDatosObra(@PathParam("id") String idExpediente, Map<String, Object> body) {
         try {
             String cedula = (String) body.get("cedula");
@@ -132,16 +133,19 @@ public class CertificacionResource {
             
             orchestrator.registrarDatosFase2(idExpediente, (ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.UsuarioEntity) usuario, body);
             
+            // Forzar persistencia para capturar cualquier error de SQL de inmediato
+            ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.UsuarioEntity.getEntityManager().flush();
+            
             Map<String, String> response = new HashMap<>();
             response.put("mensaje", "Datos guardados y vinculados correctamente en la base de datos.");
             response.put("estado", "ESPERANDO_FIRMA");
             
             return Response.ok(response).build();
         } catch (Exception e) {
-            String msg = e.getMessage();
+            String msg = e.getMessage() != null ? e.getMessage() : e.toString();
             Throwable cause = e.getCause();
             while(cause != null) {
-                msg += " | Causa: " + cause.getMessage();
+                msg += " | Causa: " + (cause.getMessage() != null ? cause.getMessage() : cause.toString());
                 cause = cause.getCause();
             }
             return errorResponse(msg);
@@ -150,18 +154,15 @@ public class CertificacionResource {
 
     @POST
     @Path("/{id}/firmar")
-    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     public Response firmarExpediente(@PathParam("id") String idExpediente,
-                                     @RestForm("certificado") FileUpload p12Upload,
                                      @RestForm("password") String password) {
         try {
-            if (p12Upload == null || password == null || password.isEmpty()) {
-                return errorResponse("Falta el certificado P12 o la contraseña.");
+            if (password == null || password.isEmpty()) {
+                return errorResponse("Falta la contraseña.");
             }
 
-            File p12File = p12Upload.uploadedFile().toFile();
-            
-            String hashCert = orchestrator.firmarFase3(idExpediente, p12File, password);
+            String hashCert = orchestrator.firmarFase3(idExpediente, password);
 
             Map<String, String> response = new HashMap<>();
             response.put("hash_certificado", hashCert);
@@ -194,7 +195,8 @@ public class CertificacionResource {
     }
 
     private Response errorResponse(String message) {
-        String jsonError = "{\"error\": \"" + message.replace("\"", "\\\"").replace("\n", " ") + "\"}";
-        return Response.status(Response.Status.BAD_REQUEST).entity(jsonError).build();
+        Map<String, String> errorPayload = new HashMap<>();
+        errorPayload.put("error", message != null ? message : "Error interno desconocido");
+        return Response.status(Response.Status.BAD_REQUEST).entity(errorPayload).build();
     }
 }

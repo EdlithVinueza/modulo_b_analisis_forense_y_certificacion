@@ -17,6 +17,10 @@ dependencies {
     implementation("io.quarkus:quarkus-arc")
     implementation("io.quarkus:quarkus-rest")
     implementation("io.quarkus:quarkus-rest-jsonb")
+    implementation("io.quarkus:quarkus-rest-client")
+
+    // Extensión de Quarkus para Azure Key Vault
+    implementation("io.quarkiverse.azureservices:quarkus-azure-keyvault:1.2.4")
 
     // Persistencia (ORM, BD y Migraciones)
     implementation("io.quarkus:quarkus-hibernate-orm")
@@ -60,6 +64,8 @@ dependencies {
 
     // JUnit 5 para pruebas unitarias
     testImplementation("io.quarkus:quarkus-junit5")
+    testImplementation("io.quarkus:quarkus-test-common")
+    testImplementation("io.quarkus:quarkus-test-security")
     testImplementation(platform("org.junit:junit-bom:5.10.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

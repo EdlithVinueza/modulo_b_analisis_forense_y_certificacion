@@ -49,3 +49,6 @@ src/test/resources/
 # Mantener estructura vacía opcional
 !src/main/resources/.gitkeep
 !src/test/resources/.gitkeep
+
+# Secretos locales
+.env

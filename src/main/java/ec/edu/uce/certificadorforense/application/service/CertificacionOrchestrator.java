@@ -48,6 +48,11 @@ public class CertificacionOrchestrator {
     @jakarta.inject.Inject
     HistorialHelperService historialHelper;
 
+    @jakarta.inject.Inject
+    ec.edu.uce.certificadorforense.infrastructure.adapters.output.IdentitySecurityAdapter identitySecurityAdapter;
+
+    @jakarta.inject.Inject
+    ec.edu.uce.certificadorforense.infrastructure.adapters.output.VaultSealAdapter vaultSealAdapter;
 
     // Caché en memoria para las peticiones stateless del Frontend
     private final Map<String, ContextoProceso> contextoCache = new ConcurrentHashMap<>();
@@ -234,6 +239,9 @@ public class CertificacionOrchestrator {
                     FirmaAutorEntity.delete("expediente", expAnterior);
                     expAnterior.delete();
                     expAnterior.obra.delete();
+                    
+                    // Forzar el flush para que los DELETEs se ejecuten en SQL ANTES del INSERT
+                    ExpedienteForenseEntity.getEntityManager().flush();
                 }
             }
 
@@ -293,7 +301,7 @@ public class CertificacionOrchestrator {
     }
 
     @Transactional
-    public String firmarFase3(String idExpediente, File p12File, String password) throws Exception {
+    public String firmarFase3(String idExpediente, String password) throws Exception {
         ContextoProceso contexto = contextoCache.get(idExpediente);
         if (contexto == null) throw new RuntimeException("Expediente expirado o no existe.");
 
@@ -309,11 +317,46 @@ public class CertificacionOrchestrator {
         String expedienteJson = gson.toJson(expediente);
         contexto.setExpedienteJson(expedienteJson);
 
-        FirmadorExpedientePort firmadorExp = new FirmadorP12Adapter();
-        FirmaAutorService firmaServ = new FirmaAutorService(firmadorExp);
-        
-        firmaServ.validar(p12File, password);
-        FirmaAutor firma = firmaServ.firmar(expedienteJson, p12File, password);
+        ExpedienteForenseEntity expDb = ExpedienteForenseEntity.findById(UUID.fromString(idExpediente));
+        if (expDb == null) throw new RuntimeException("Expediente no encontrado en BD.");
+
+        UsuarioEntity usuario = expDb.obra.usuario;
+        String p12Base64 = usuario.firmaP12;
+        if (p12Base64 == null || p12Base64.isEmpty()) {
+            throw new RuntimeException("El usuario no tiene una firma digital configurada en el sistema.");
+        }
+
+        // Calcular Hash del Expediente
+        java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-512");
+        byte[] hashBytes = md.digest(expedienteJson.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        StringBuilder sb = new StringBuilder();
+        for (byte b : hashBytes) {
+            sb.append(String.format("%02x", b));
+        }
+        String hashObra = sb.toString();
+
+        String firmaBase64;
+        try {
+            firmaBase64 = identitySecurityAdapter.getAuthorDigitalSignature(p12Base64, password, hashObra);
+        } catch (jakarta.ws.rs.WebApplicationException we) {
+            we.printStackTrace();
+            String responseBody = we.getResponse().readEntity(String.class);
+            throw new RuntimeException("Respuesta de la CA: " + responseBody);
+        } catch(Exception e) {
+            // Imprimir el error REAL en la consola de Quarkus para depurar si es fallo de Azure, de payload o timeout
+            e.printStackTrace();
+            // Retornamos el error original para que lo puedas ver en la pantalla de Vue!
+            String errorReal = e.getMessage() != null ? e.getMessage() : e.toString();
+            throw new RuntimeException("Fallo de conexión con Azure: " + errorReal);
+        }
+
+        FirmaAutor firma = FirmaAutor.builder()
+                .firmaBase64(firmaBase64)
+                .hashExpediente(hashObra)
+                .algoritmo("SHA512withRSA")
+                .fechaFirma(java.time.Instant.now())
+                .aliasKeystore("AzureCloud")
+                .build();
         contexto.setFirmaAutor(firma);
 
         if (contexto.getEstadoActual() instanceof ec.edu.uce.certificadorforense.core.state.FirmaAutorState) {
@@ -321,8 +364,6 @@ public class CertificacionOrchestrator {
         }
 
         // PERSISTENCIA DB
-        ExpedienteForenseEntity expDb = ExpedienteForenseEntity.findById(UUID.fromString(idExpediente));
-        
         FirmaAutorEntity firmaDb = new FirmaAutorEntity();
         firmaDb.id = UUID.randomUUID();
         firmaDb.expediente = expDb;
@@ -372,12 +413,11 @@ public class CertificacionOrchestrator {
 
         byte[] pdfSinFirmar = generadorPDF.generar(certificado, contexto.getExpediente(), expedienteFirmadoJson, imagenBase64);
         
-        FirmadorPDFPort firmadorPDF = new FirmadorPDFAdapter(RUTA_ROOT_CA);
         byte[] pdfFirmado = pdfSinFirmar;
         try {
-            pdfFirmado = firmadorPDF.firmarPDF(pdfSinFirmar, PASS_CA);
+            pdfFirmado = vaultSealAdapter.applyInstitutionalSeal(pdfSinFirmar, "TesisEF2026!");
         } catch(Exception e) {
-            System.err.println("Fallback: No se pudo firmar el PDF con la CA del sistema. Enviando PDF sin firmar.");
+            System.err.println("Fallback: No se pudo firmar el PDF con Azure Key Vault. Enviando PDF sin firmar. Detalle: " + e.getMessage());
         }
         contexto.setPdfCertificado(pdfFirmado);
 

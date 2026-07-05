@@ -40,4 +40,7 @@ public class UsuarioEntity extends PanacheEntityBase {
     public LocalDateTime fechaRegistro;
 
     public Boolean activo;
+
+    @Column(name = "firma_p12", columnDefinition = "TEXT")
+    public String firmaP12;
 }
