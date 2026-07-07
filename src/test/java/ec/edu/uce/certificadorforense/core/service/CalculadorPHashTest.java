@@ -41,6 +41,10 @@ public class CalculadorPHashTest {
         String primerHash = hashes.get(0);
         for (int i = 1; i < hashes.size(); i++) {
             double similitud = calculador.compararSimilitud(primerHash, hashes.get(i));
+            
+            // Imprimir el resultado de la similitud en la consola
+            System.out.println("Comparando '" + nombres.get(0) + "' con '" + nombres.get(i) + "' -> Similitud: " + String.format("%.2f", similitud) + "%");
+            
             assertTrue(similitud >= 95.0, 
                 "El hash de la imagen '" + nombres.get(i) + "' no es suficientemente similar a la primera imagen '" + nombres.get(0) + "'. Similitud: " + similitud + "%");
         }

@@ -26,8 +26,8 @@ dependencies {
     implementation("io.quarkus:quarkus-hibernate-orm")
     implementation("io.quarkus:quarkus-hibernate-orm-panache")
     implementation("io.quarkus:quarkus-jdbc-postgresql")
-    implementation("io.quarkus:quarkus-flyway")
-    runtimeOnly("org.flywaydb:flyway-database-postgresql:12.5.0")
+    // implementation("io.quarkus:quarkus-flyway")
+    // runtimeOnly("org.flywaydb:flyway-database-postgresql:12.5.0")
 
     implementation("com.drewnoakes:metadata-extractor:2.20.0")
 
@@ -76,7 +76,7 @@ application {
 }
 
 tasks.test {
-    enabled = false
+    enabled = true
     useJUnitPlatform()
     testLogging {
         events("passed", "skipped", "failed")
