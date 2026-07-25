@@ -8,6 +8,7 @@ import jakarta.ws.rs.core.Response;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 
+import io.vertx.core.http.HttpServerRequest;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
@@ -28,6 +29,9 @@ public class CertificacionResource {
 
     @Inject
     ec.edu.uce.certificadorforense.application.service.RecuperacionCertificadoService recuperacionService;
+
+    @Inject
+    HttpServerRequest request;
 
     @POST
     @Path("/init")
@@ -130,7 +134,16 @@ public class CertificacionResource {
                        .entity("{\"error\": \"Ese número de cédula no se encuentra registrado en nuestro sistema.\"}")
                        .build();
             }
-            
+
+            String ipCliente = request.getHeader("X-Forwarded-For");
+            if (ipCliente == null || ipCliente.isEmpty()) {
+                ipCliente = request.remoteAddress() != null ? request.remoteAddress().host() : "127.0.0.1";
+            }
+            if (ipCliente != null && ipCliente.contains(",")) {
+                ipCliente = ipCliente.split(",")[0].trim();
+            }
+            body.put("ip_registro", ipCliente);
+
             orchestrator.registrarDatosFase2(idExpediente, (ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.UsuarioEntity) usuario, body);
             
             // Forzar persistencia para capturar cualquier error de SQL de inmediato

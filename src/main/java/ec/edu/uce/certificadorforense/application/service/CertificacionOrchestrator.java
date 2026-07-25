@@ -349,6 +349,7 @@ public class CertificacionOrchestrator {
                     // archivo)
                     // Eliminamos el borrador anterior para permitir este nuevo intento.
                     HistorialEstadoEntity.delete("obra", expAnterior.obra);
+                    DeclaracionesObraEntity.delete("obra", expAnterior.obra);
                     FirmaAutorEntity.delete("expediente", expAnterior);
                     expAnterior.delete();
                     expAnterior.obra.delete();
@@ -370,6 +371,15 @@ public class CertificacionOrchestrator {
             obraEntity.fechaRegistro = LocalDateTime.now();
             obraEntity.estadoActual = "ESPERANDO_FIRMA";
             obraEntity.persist();
+
+            DeclaracionesObraEntity decDb = new DeclaracionesObraEntity();
+            decDb.id = UUID.randomUUID();
+            decDb.obra = obraEntity;
+            decDb.esTitularDerechos = decl.isTitularDerechos();
+            decDb.aceptaTerminosCertificacion = decl.isAceptaTerminos();
+            decDb.fechaAceptacion = LocalDateTime.now();
+            decDb.ipRegistro = (String) body.get("ip_registro");
+            decDb.persist();
 
             expDb = new ExpedienteForenseEntity();
             expDb.id = UUID.fromString(idExpediente);
@@ -410,6 +420,18 @@ public class CertificacionOrchestrator {
             obraEntity.hardware = obra.getHardware();
             obraEntity.fechaCreacion = obra.getFechaCreacion();
             obraEntity.persist();
+
+            DeclaracionesObraEntity decDb = DeclaracionesObraEntity.find("obra", obraEntity).firstResult();
+            if (decDb == null) {
+                decDb = new DeclaracionesObraEntity();
+                decDb.id = UUID.randomUUID();
+                decDb.obra = obraEntity;
+            }
+            decDb.esTitularDerechos = decl.isTitularDerechos();
+            decDb.aceptaTerminosCertificacion = decl.isAceptaTerminos();
+            decDb.fechaAceptacion = LocalDateTime.now();
+            decDb.ipRegistro = (String) body.get("ip_registro");
+            decDb.persist();
 
             HistorialEstadoEntity hist = new HistorialEstadoEntity();
             hist.id = UUID.randomUUID();
@@ -493,9 +515,12 @@ public class CertificacionOrchestrator {
         }
 
         // PERSISTENCIA DB
-        FirmaAutorEntity firmaDb = new FirmaAutorEntity();
-        firmaDb.id = UUID.randomUUID();
-        firmaDb.expediente = expDb;
+        FirmaAutorEntity firmaDb = FirmaAutorEntity.find("expediente", expDb).firstResult();
+        if (firmaDb == null) {
+            firmaDb = new FirmaAutorEntity();
+            firmaDb.id = UUID.randomUUID();
+            firmaDb.expediente = expDb;
+        }
         firmaDb.usuario = expDb.obra.usuario;
         firmaDb.hashFirmado = firma.getHashExpediente();
         firmaDb.firmaBase64 = firma.getFirmaBase64();
@@ -506,7 +531,7 @@ public class CertificacionOrchestrator {
         HistorialEstadoEntity hist = new HistorialEstadoEntity();
         hist.id = UUID.randomUUID();
         hist.obra = expDb.obra;
-        hist.estadoAnterior = "ESPERANDO_FIRMA";
+        hist.estadoAnterior = expDb.obra.estadoActual;
         hist.estadoNuevo = "CERTIFICADO";
         hist.fechaCambio = LocalDateTime.now();
         hist.observacion = "Obra firmada digitalmente.";
@@ -571,9 +596,12 @@ public class CertificacionOrchestrator {
 
         // Persistencia Final DB
         ExpedienteForenseEntity expDb = ExpedienteForenseEntity.findById(UUID.fromString(idExpediente));
-        CertificadoEntity certDb = new CertificadoEntity();
-        certDb.id = UUID.randomUUID();
-        certDb.obra = expDb.obra;
+        CertificadoEntity certDb = CertificadoEntity.find("obra", expDb.obra).firstResult();
+        if (certDb == null) {
+            certDb = new CertificadoEntity();
+            certDb.id = UUID.randomUUID();
+            certDb.obra = expDb.obra;
+        }
         certDb.numeroCertificado = certificado.getIdCertificado();
         certDb.expedienteFirmadoRaw = expedienteFirmadoJson;
         certDb.hashCertificado = certificado.getHashExpedienteFirmado();
@@ -585,7 +613,7 @@ public class CertificacionOrchestrator {
         HistorialEstadoEntity hist = new HistorialEstadoEntity();
         hist.id = UUID.randomUUID();
         hist.obra = expDb.obra;
-        hist.estadoAnterior = "CERTIFICADO";
+        hist.estadoAnterior = expDb.obra.estadoActual;
         hist.estadoNuevo = "FINALIZADO";
         hist.fechaCambio = LocalDateTime.now();
         hist.observacion = "Fase 4 completada. Certificado y ZIP generados.";
