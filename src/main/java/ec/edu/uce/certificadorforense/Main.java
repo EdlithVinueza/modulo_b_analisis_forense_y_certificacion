@@ -1,6 +1,6 @@
 package ec.edu.uce.certificadorforense;
 
-import ec.edu.uce.certificadorforense.core.model.base.ArchivoBase;
+import ec.edu.uce.certificadorforense.core.modelimplement.ArchivoBase;
 import ec.edu.uce.certificadorforense.core.model.imagen.ArchivoImagen;
 import ec.edu.uce.certificadorforense.core.model.psd.ArchivoPSD;
 import ec.edu.uce.certificadorforense.core.model.validacion.VeredictoFinal;
@@ -54,13 +54,20 @@ public class Main {
         // 3. Instanciar el comparador de similitud perceptual por pHash
         CalculadorPHash calculadorPHash = new CalculadorPHash();
 
-        // 4. Definir archivos pesados a probar
-        String pathRecursos = "src/main/resources/";
-        File archivoPSD = new File(pathRecursos + "archivos_psd_prueba/Chica de cabello y girasoles - 05-02-2026.psd");
-        File archivoPNG = new File(pathRecursos + "imagenes_prueba/original.png");
+        // 4. Obtener archivos a procesar desde argumentos CLI si se proveen
+        if (args.length < 2) {
+            System.out.println("\nUso del Benchmark Forense: java -jar app.jar <ruta-archivo.psd> <ruta-imagen.png|jpg>");
+            System.out.println("No se especificaron archivos de entrada por consola.");
+            return;
+        }
+
+        File archivoPSD = new File(args[0]);
+        File archivoPNG = new File(args[1]);
 
         if (!archivoPSD.exists() || !archivoPNG.exists()) {
-            System.err.println("Error: Asegúrate de tener los archivos Chica de cabello y girasoles - 05-02-2026.psd (en archivos_psd_prueba) y original.png (en imagenes_prueba).");
+            System.err.println("Error: Uno o ambos archivos especificados no existen:");
+            System.err.println("  • PSD: " + archivoPSD.getAbsolutePath());
+            System.err.println("  • Imagen: " + archivoPNG.getAbsolutePath());
             return;
         }
 

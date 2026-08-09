@@ -1,6 +1,7 @@
 package ec.edu.uce.certificadorforense.infrastructure.adapters.rest;
 
 import ec.edu.uce.certificadorforense.application.service.CertificacionOrchestrator;
+import io.smallrye.common.annotation.Blocking;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -17,7 +18,8 @@ import java.util.Map;
 
 /**
  * Controlador REST que actúa como punto de entrada de la UI en Vue.
- * Ahora delegando correctamente al Orquestador (Arquitectura Hexagonal).
+ * Delegando al Orquestador (Arquitectura Hexagonal).
+ * Todos los endpoints llevan @Blocking para evitar bloquear el Event Loop de Vert.x en RESTEasy Reactive.
  */
 @Path("/api/v1/certificaciones")
 @Produces(MediaType.APPLICATION_JSON)
@@ -36,25 +38,26 @@ public class CertificacionResource {
     @POST
     @Path("/init")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Blocking
     public Response iniciarCertificacion(@RestForm("psd") FileUpload psdFile,
                                          @RestForm("imagen") FileUpload imagenFile) {
+        java.nio.file.Path tempPsd = null;
+        java.nio.file.Path tempImg = null;
         try {
             if (psdFile == null || imagenFile == null) {
                 return errorResponse("Faltan archivos para iniciar el análisis.");
             }
 
-            // RESTEasy genera archivos sin extensión (ej. resteasy-reactive123upload).
-            // Para que la regla de "Firma Estructural Forense" pase, el archivo debe terminar en .png/.psd
-            java.nio.file.Path tempPsd = Files.createTempFile("forense-", "-" + psdFile.fileName());
+            // RESTEasy genera archivos sin extensión. Para que la regla pase, se agrega sufijo.
+            tempPsd = Files.createTempFile("forense-", "-" + psdFile.fileName());
             Files.copy(psdFile.uploadedFile(), tempPsd, StandardCopyOption.REPLACE_EXISTING);
             
-            java.nio.file.Path tempImg = Files.createTempFile("forense-", "-" + imagenFile.fileName());
+            tempImg = Files.createTempFile("forense-", "-" + imagenFile.fileName());
             Files.copy(imagenFile.uploadedFile(), tempImg, StandardCopyOption.REPLACE_EXISTING);
             
             File psd = tempPsd.toFile();
             File img = tempImg.toFile();
             
-            // Detect extension from filename
             String ext = "png";
             if(imagenFile.fileName().toLowerCase().endsWith(".jpg") || imagenFile.fileName().toLowerCase().endsWith(".jpeg")) {
                 ext = "jpg";
@@ -68,16 +71,21 @@ public class CertificacionResource {
             return Response.ok(response).build();
         } catch (Exception e) {
             return errorResponse(e.getMessage());
+        } finally {
+            if (tempPsd != null) { try { Files.deleteIfExists(tempPsd); } catch (Exception ignored) {} }
+            if (tempImg != null) { try { Files.deleteIfExists(tempImg); } catch (Exception ignored) {} }
         }
     }
 
     @POST
     @Path("/recuperar")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @Produces("application/zip")
+    @Blocking
     public Response recuperarCertificado(@RestForm("imagen") FileUpload imagenFile,
                                          @RestForm("hash_duplicado") String hashDuplicado,
                                          @RestForm("cedula") String cedula) {
+        java.nio.file.Path tempImg = null;
         try {
             if (imagenFile == null || hashDuplicado == null || cedula == null) {
                 return Response.status(Response.Status.BAD_REQUEST)
@@ -86,7 +94,7 @@ public class CertificacionResource {
                         .build();
             }
 
-            java.nio.file.Path tempImg = Files.createTempFile("forense-rec-", "-" + imagenFile.fileName());
+            tempImg = Files.createTempFile("forense-rec-", "-" + imagenFile.fileName());
             Files.copy(imagenFile.uploadedFile(), tempImg, StandardCopyOption.REPLACE_EXISTING);
             File img = tempImg.toFile();
 
@@ -97,16 +105,14 @@ public class CertificacionResource {
 
             byte[] zipBytes = recuperacionService.recuperarCertificadoLocalmente(hashDuplicado, cedula, img, ext);
 
-            // Borrar archivo temporal
-            try { Files.deleteIfExists(img.toPath()); } catch (Exception ignored) {}
-
-            return Response.ok(zipBytes)
+            return Response.ok(zipBytes, "application/zip")
                     .header("Content-Disposition", "attachment; filename=\"Expediente_Recuperado.zip\"")
+                    .header("Content-Length", zipBytes.length)
                     .build();
 
         } catch (Exception e) {
             e.printStackTrace();
-            if (e.getMessage().contains("ConflictoPropiedadException")) {
+            if (e.getMessage() != null && e.getMessage().contains("ConflictoPropiedadException")) {
                 return Response.status(Response.Status.CONFLICT)
                         .type(MediaType.TEXT_PLAIN)
                         .entity(e.getMessage())
@@ -116,17 +122,19 @@ public class CertificacionResource {
                     .type(MediaType.TEXT_PLAIN)
                     .entity("Error en la recuperación: " + e.getMessage())
                     .build();
+        } finally {
+            if (tempImg != null) { try { Files.deleteIfExists(tempImg); } catch (Exception ignored) {} }
         }
     }
 
     @PUT
     @Path("/{id}/datos")
     @jakarta.transaction.Transactional
+    @Blocking
     public Response enviarDatosObra(@PathParam("id") String idExpediente, Map<String, Object> body) {
         try {
             String cedula = (String) body.get("cedula");
             
-            // Verificar en la BD (Panache) si la cédula existe
             var usuario = ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.UsuarioEntity.find("cedula", cedula).firstResult();
             
             if (usuario == null) {
@@ -146,7 +154,6 @@ public class CertificacionResource {
 
             orchestrator.registrarDatosFase2(idExpediente, (ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.UsuarioEntity) usuario, body);
             
-            // Forzar persistencia para capturar cualquier error de SQL de inmediato
             ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.UsuarioEntity.getEntityManager().flush();
             
             Map<String, String> response = new HashMap<>();
@@ -168,6 +175,7 @@ public class CertificacionResource {
     @POST
     @Path("/{id}/firmar")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+    @Blocking
     public Response firmarExpediente(@PathParam("id") String idExpediente,
                                      @RestForm("password") String password) {
         try {
@@ -183,26 +191,34 @@ public class CertificacionResource {
             
             return Response.ok(response).build();
         } catch (Exception e) {
-            // Vue interceptará este JSON para mostrar alertas estructuradas.
             return errorResponse(e.getMessage());
         }
     }
 
     @GET
     @Path("/{id}/descargar")
-    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    @Produces("application/zip")
+    @Blocking
     public Response descargarCertificado(@PathParam("id") String idExpediente) {
         try {
             byte[] zipBytes = orchestrator.obtenerZipYLimpiar(idExpediente);
 
-            return Response.ok(zipBytes)
+            if (zipBytes == null || zipBytes.length == 0) {
+                return Response.status(Response.Status.NOT_FOUND)
+                        .type(MediaType.APPLICATION_JSON)
+                        .entity("{\"error\": \"El paquete ZIP no pudo ser generado o no existe para el expediente: " + idExpediente + "\"}")
+                        .build();
+            }
+
+            return Response.ok(zipBytes, "application/zip")
                     .header("Content-Disposition", "attachment; filename=\"Expediente_Forense_" + idExpediente + ".zip\"")
+                    .header("Content-Length", zipBytes.length)
                     .build();
         } catch (Exception e) {
-            e.printStackTrace(); // Log the exact error to the terminal
+            e.printStackTrace();
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .type(MediaType.TEXT_PLAIN)
-                    .entity("Error al generar el ZIP: " + e.getMessage())
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity("{\"error\": \"Error al generar el paquete ZIP: " + e.getMessage() + "\"}")
                     .build();
         }
     }

@@ -6,6 +6,7 @@ import ec.edu.uce.certificadorforense.core.model.imagen.MetadatosImagen;
 import ec.edu.uce.certificadorforense.core.model.imagen.EstructuraImagen;
 
 import java.io.File;
+import java.nio.file.Files;
 
 /**
  * Procesador específico para archivos de imagen (PNG, JPEG).
@@ -27,6 +28,13 @@ public class ArchivoImagenProcessor implements ArchivoProcessorPort<ArchivoImage
             throw new IllegalArgumentException("El archivo es inválido o no existe.");
         }
 
+        byte[] bytes;
+        try {
+            bytes = Files.readAllBytes(file.toPath());
+        } catch (Exception e) {
+            bytes = new byte[0];
+        }
+
         // 1. Extraer metadatos
         MetadatosImagen metadatos = metadatosService.procesarArchivo(file);
 
@@ -36,7 +44,7 @@ public class ArchivoImagenProcessor implements ArchivoProcessorPort<ArchivoImage
         // 3. Fusionar en el objeto del dominio
         return ArchivoImagen.builder()
                 .nombreArchivo(file.getName())
-                .rutaAbsoluta(file.getAbsolutePath())
+                .contenidoBytes(bytes)
                 .tamanoBytes(file.length())
                 .metadatos(metadatos)
                 .estructura(estructura)
@@ -49,3 +57,4 @@ public class ArchivoImagenProcessor implements ArchivoProcessorPort<ArchivoImage
         return "PNG".equals(formato) || "JPEG".equals(formato);
     }
 }
+

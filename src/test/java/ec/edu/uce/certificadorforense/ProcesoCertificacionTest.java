@@ -12,9 +12,9 @@ import ec.edu.uce.certificadorforense.core.model.firma.FirmaAutor;
 import ec.edu.uce.certificadorforense.core.model.imagen.ArchivoImagen;
 import ec.edu.uce.certificadorforense.core.model.psd.ArchivoPSD;
 import ec.edu.uce.certificadorforense.core.model.validacion.VeredictoFinal;
-import ec.edu.uce.certificadorforense.core.observer.EventPublisher;
+import ec.edu.uce.certificadorforense.core.observerinterface.EventPublisher;
 import ec.edu.uce.certificadorforense.core.observer.eventos.*;
-import ec.edu.uce.certificadorforense.core.observer.listeners.*;
+import ec.edu.uce.certificadorforense.core.observerimplement.*;
 import ec.edu.uce.certificadorforense.core.ports.out.*;
 import ec.edu.uce.certificadorforense.core.service.*;
 import ec.edu.uce.certificadorforense.core.state.*;
@@ -31,7 +31,7 @@ import ec.edu.uce.certificadorforense.infrastructure.adapters.processors.*;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.qr.QRGeneratorAdapter;
 import ec.edu.uce.certificadorforense.core.service.ArchivoProcessorFactory;
 import ec.edu.uce.certificadorforense.core.ports.out.ArchivoProcessorPort;
-import ec.edu.uce.certificadorforense.core.model.base.ArchivoBase;
+import ec.edu.uce.certificadorforense.core.modelimplement.ArchivoBase;
 import ec.edu.uce.certificadorforense.core.service.ValidadorGenericoService;
 import ec.edu.uce.certificadorforense.core.service.CalculadorPHash;
 
@@ -51,16 +51,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ProcesoCertificacionTest {
 
-    private static final String BASE_PATH = "/home/edlith/Documentos/UCE 26-26/TESIS/Archivos de Prueba/";
+    private static final String BASE_PATH = "C:/Users/edlit/OneDrive/Documentos/TESIS/Archivos de Prueba/expotados png y psd/";
     private static final String RUTA_PSD = BASE_PATH + "psd/girasoles-original.psd";
     private static final String RUTA_IMAGEN = BASE_PATH + "imagenes/girasol-original.png";
 
     // User requested paths and passwords
-    private static final String RUTA_P12_AUTOR = "/home/edlith/Documentos/UCE 26-26/TESIS/CLAVES LINUX/autor_certificado/autor.p12";
-    private static final String PASS_AUTOR = "MiClaveSegura123";
+    private static final String RUTA_P12_AUTOR = "C:/Users/edlit/OneDrive/Documentos/TESIS/Archivos de Prueba/firma .p12/firma_9900000003.p12";
+    private static final String PASS_AUTOR = "ClaveDe123";
 
-    private static final String PASS_CA = "ClaveSistema2026!"; // Default from ProcesoCertificacionRunner
-    private static final String DIRECTORIO_SALIDA = "resultados_test_certificacion";
+    private static final String PASS_CA = "ClaveDe123";
+    private static final String DIRECTORIO_SALIDA = "build/test-results/certificacion";
 
     @Test
     public void testFlujoCompletoCertificacionPNG() throws Exception {
@@ -91,7 +91,7 @@ public class ProcesoCertificacionTest {
         GeneradorHashPort hashPort = new SHA512Adapter();
         GeneradorQRPort qrPort = new QRGeneratorAdapter();
         FirmadorExpedientePort firmadorExp = new FirmadorP12Adapter();
-        String rutaRootCa = "/home/edlith/Documentos/UCE 26-26/TESIS/CLAVES LINUX/sistema_certificado/sistema.p12";
+        String rutaRootCa = "C:/Users/edlit/OneDrive/Documentos/TESIS/Archivos de Prueba/firma .p12/firma_9900000003.p12";
         FirmadorPDFPort firmadorPDF = new FirmadorPDFAdapter(rutaRootCa);
         GeneradorPDFPort generadorPDF = new GeneradorPDFAdapter();
         

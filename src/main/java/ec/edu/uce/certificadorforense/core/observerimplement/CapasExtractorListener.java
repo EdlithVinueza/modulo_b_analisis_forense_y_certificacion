@@ -1,16 +1,13 @@
-package ec.edu.uce.certificadorforense.core.observer.listeners;
+package ec.edu.uce.certificadorforense.core.observerimplement;
 
-import ec.edu.uce.certificadorforense.core.observer.EventListener;
-import ec.edu.uce.certificadorforense.core.observer.EventoSistema;
+import ec.edu.uce.certificadorforense.core.observerinterface.EventListener;
+import ec.edu.uce.certificadorforense.core.observerinterface.EventoSistema;
 import ec.edu.uce.certificadorforense.core.observer.eventos.EventoAnalisisIniciado;
 import ec.edu.uce.certificadorforense.core.state.ContextoProceso;
 
 /**
  * Listener: al {@link EventoAnalisisIniciado}, extrae el número de capas del PSD
  * y lo almacena en el {@link ContextoProceso}.
- * <p>
- * Reutiliza las capas ya extraídas en {@code ArchivoPSD.getCapas()}.
- * </p>
  */
 public class CapasExtractorListener implements EventListener {
 
@@ -28,13 +25,9 @@ public class CapasExtractorListener implements EventListener {
     @Override
     public void onEvento(EventoSistema evento) {
         EventoAnalisisIniciado e = (EventoAnalisisIniciado) evento;
-        System.out.println("[CapasExtractorListener] Contando capas PSD...");
-
         int numCapas = e.getArchivoPSD().getCapas() != null
                 ? e.getArchivoPSD().getCapas().size()
                 : 0;
         contexto.setCapasPSD(numCapas);
-
-        System.out.println("  Capas detectadas: " + numCapas);
     }
 }

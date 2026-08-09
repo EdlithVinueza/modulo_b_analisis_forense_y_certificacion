@@ -10,7 +10,8 @@ import ec.edu.uce.certificadorforense.core.model.firma.FirmaAutor;
 import ec.edu.uce.certificadorforense.core.model.imagen.ArchivoImagen;
 import ec.edu.uce.certificadorforense.core.model.psd.ArchivoPSD;
 import ec.edu.uce.certificadorforense.core.model.validacion.VeredictoFinal;
-import ec.edu.uce.certificadorforense.core.observer.EventPublisher;
+import ec.edu.uce.certificadorforense.core.observerinterface.EventPublisher;
+import ec.edu.uce.certificadorforense.core.observerimplement.*;
 import ec.edu.uce.certificadorforense.core.observer.eventos.*;
 import ec.edu.uce.certificadorforense.core.ports.out.*;
 import ec.edu.uce.certificadorforense.core.service.*;
@@ -25,7 +26,7 @@ import ec.edu.uce.certificadorforense.infrastructure.adapters.hash.SHA512Adapter
 import ec.edu.uce.certificadorforense.infrastructure.adapters.pdf.GeneradorPDFAdapter;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.processors.*;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.qr.QRGeneratorAdapter;
-import ec.edu.uce.certificadorforense.core.model.base.ArchivoBase;
+import ec.edu.uce.certificadorforense.core.modelimplement.ArchivoBase;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.*;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -53,6 +54,9 @@ public class CertificacionOrchestrator {
 
     @jakarta.inject.Inject
     ec.edu.uce.certificadorforense.infrastructure.adapters.output.VaultSealAdapter vaultSealAdapter;
+
+    @jakarta.inject.Inject
+    ec.edu.uce.certificadorforense.infrastructure.adapters.security.VaultEncryptionService vaultEncryptionService;
 
     @org.eclipse.microprofile.config.inject.ConfigProperty(name = "tesis.cert.password")
     String certPassword;
@@ -476,6 +480,11 @@ public class CertificacionOrchestrator {
             throw new RuntimeException("El usuario no tiene una firma digital configurada en el sistema.");
         }
 
+        // Desciframos el sobre criptográfico de la credencial .p12 si estaba enmascarada
+        if (vaultEncryptionService != null) {
+            p12Base64 = vaultEncryptionService.decrypt(p12Base64);
+        }
+
         // Calcular Hash del Expediente
         java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-512");
         byte[] hashBytes = md.digest(expedienteJson.getBytes(java.nio.charset.StandardCharsets.UTF_8));
@@ -573,17 +582,16 @@ public class CertificacionOrchestrator {
         byte[] pdfFirmado = pdfSinFirmar;
         try {
             pdfFirmado = vaultSealAdapter.applyInstitutionalSeal(pdfSinFirmar, certPassword);
-        } catch (Exception e) {
-            System.err.println(
-                    "Fallback: No se pudo firmar el PDF con Azure Key Vault. Enviando PDF sin firmar. Detalle: "
-                            + e.getMessage());
+        } catch (Exception ignored) {
         }
         contexto.setPdfCertificado(pdfFirmado);
 
         // Esteganografia
-        String rutaImagen = contexto.getArchivoImagen().getRutaAbsoluta().toLowerCase();
+        String ext = contexto.getArchivoImagen().getMetadatos() != null && contexto.getArchivoImagen().getMetadatos().getExtensionReal() != null
+                ? contexto.getArchivoImagen().getMetadatos().getExtensionReal().toLowerCase()
+                : contexto.getArchivoImagen().getNombreArchivo().toLowerCase();
         EsteganografiaPort estegano;
-        if (rutaImagen.endsWith(".jpg") || rutaImagen.endsWith(".jpeg")) {
+        if (ext.contains("jpg") || ext.contains("jpeg")) {
             estegano = new EsteganografiaJPEGAdapter();
         } else {
             estegano = new EsteganografiaPNGAdapter();
@@ -631,7 +639,7 @@ public class CertificacionOrchestrator {
         zos.write(pdfFirmado);
         zos.closeEntry();
 
-        String imgExt = rutaImagen.endsWith(".jpg") || rutaImagen.endsWith(".jpeg") ? ".jpg" : ".png";
+        String imgExt = ext.contains("jpg") || ext.contains("jpeg") ? ".jpg" : ".png";
         java.util.zip.ZipEntry imgEntry = new java.util.zip.ZipEntry(
                 certificado.getIdCertificado() + "-obra-certificada" + imgExt);
         zos.putNextEntry(imgEntry);

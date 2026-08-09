@@ -1,6 +1,6 @@
 package ec.edu.uce.certificadorforense.core.service;
 
-import ec.edu.uce.certificadorforense.core.model.base.ArchivoBase;
+import ec.edu.uce.certificadorforense.core.modelimplement.ArchivoBase;
 import ec.edu.uce.certificadorforense.core.model.validacion.ResultadoValidacion;
 import ec.edu.uce.certificadorforense.core.model.validacion.VeredictoFinal;
 import ec.edu.uce.certificadorforense.core.rules.IReglaValidacion;
@@ -18,8 +18,6 @@ public class ValidadorGenericoService<T extends ArchivoBase> {
     public VeredictoFinal validar(T objeto) {
         VeredictoFinal veredicto = new VeredictoFinal();
 
-        System.out.println("\nIniciando peritaje forense: " + objeto.getNombreArchivo());
-
         for (IReglaValidacion<T> regla : reglas) {
             // 1. Ejecutar la validación individual
             ResultadoValidacion resultado = regla.validar(objeto);
@@ -29,7 +27,6 @@ public class ValidadorGenericoService<T extends ArchivoBase> {
 
             // 3. Cortocircuito si tu veredicto marca rechazo
             if (veredicto.isEsRechazado()) {
-                System.err.println(" CORTOCIRCUITO: Análisis abortado por regla crítica [" + resultado.getNombreRegla() + "]");
                 break;
             }
         }

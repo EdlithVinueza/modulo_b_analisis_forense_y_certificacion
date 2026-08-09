@@ -14,9 +14,7 @@ public class FileType implements MetadataExtractor<MetadatosPSD.MetadatosPSDBuil
             return;
         }
 
-        builder.nombreArchivoDetectado(directory.getDescription(FileTypeDirectory.TAG_DETECTED_FILE_TYPE_NAME))
-               .nombreLargoArchivoDetectado(directory.getDescription(FileTypeDirectory.TAG_DETECTED_FILE_TYPE_LONG_NAME))
-               .tipoMimeDetectado(directory.getDescription(FileTypeDirectory.TAG_DETECTED_FILE_MIME_TYPE))
-               .extensionEsperada(directory.getDescription(FileTypeDirectory.TAG_EXPECTED_FILE_NAME_EXTENSION));
+        builder.nombreArchivoDetectado(directory.getDescription(FileTypeDirectory.TAG_DETECTED_FILE_TYPE_NAME));
     }
 }
+

@@ -12,15 +12,5 @@ public class EstructuraImagen {
     private int dpiX;
     private int dpiY;
     private boolean tieneResolucionFisica;
-
-    @Override
-    public String toString() {
-        return String.format(
-                "\n[ANÁLISIS ESTRUCTURAL BINARIO]\n" +
-                        "• Firma (Magic):    %s\n" +
-                        "• Formato Real:     %s\n" +
-                        "• Densidad Física:  %d x %d DPI",
-                firmaHex, formatoReal, dpiX, dpiY
-        );
-    }
 }
+

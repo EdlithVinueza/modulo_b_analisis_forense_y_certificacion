@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import ec.edu.uce.certificadorforense.core.model.base.ArchivoBase;
+import ec.edu.uce.certificadorforense.core.modelimplement.ArchivoBase;
 
 @Getter
 @Setter
@@ -17,3 +17,4 @@ public class ArchivoImagen extends ArchivoBase {
     @Override
     public MetadatosImagen getMetadatos() { return metadatos; }
 }
+

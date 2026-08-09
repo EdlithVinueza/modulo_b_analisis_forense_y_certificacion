@@ -2,7 +2,7 @@ package ec.edu.uce.certificadorforense.core.observer.eventos;
 
 import ec.edu.uce.certificadorforense.core.model.imagen.ArchivoImagen;
 import ec.edu.uce.certificadorforense.core.model.psd.ArchivoPSD;
-import ec.edu.uce.certificadorforense.core.observer.EventoSistema;
+import ec.edu.uce.certificadorforense.core.observerinterface.EventoSistema;
 import lombok.Getter;
 
 import java.time.Instant;

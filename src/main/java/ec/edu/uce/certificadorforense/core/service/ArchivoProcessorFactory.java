@@ -1,6 +1,6 @@
 package ec.edu.uce.certificadorforense.core.service;
 
-import ec.edu.uce.certificadorforense.core.model.base.ArchivoBase;
+import ec.edu.uce.certificadorforense.core.modelimplement.ArchivoBase;
 import ec.edu.uce.certificadorforense.core.ports.out.ArchivoProcessorPort;
 
 import java.io.File;

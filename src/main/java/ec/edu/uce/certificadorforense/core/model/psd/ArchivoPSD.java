@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import ec.edu.uce.certificadorforense.core.model.base.ArchivoBase;
+import ec.edu.uce.certificadorforense.core.modelimplement.ArchivoBase;
 
 import java.util.List;
 
@@ -19,3 +19,4 @@ public class ArchivoPSD extends ArchivoBase {
     @Override
     public MetadatosPSD getMetadatos() { return metadatos; }
 }
+

@@ -6,7 +6,6 @@ import ec.edu.uce.certificadorforense.infrastructure.adapters.extractors.Metadat
 import ec.edu.uce.certificadorforense.core.model.imagen.MetadatosImagen;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.extractors.imagen.*;
 
-
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
@@ -32,28 +31,18 @@ public class MetadatosImagenService {
 
         try {
             Metadata metadata = ImageMetadataReader.readMetadata(archivo);
-            
-            java.util.Map<String, String> metadatosCrudos = new java.util.HashMap<>();
-            for (com.drew.metadata.Directory directory : metadata.getDirectories()) {
-                for (com.drew.metadata.Tag tag : directory.getTags()) {
-                    metadatosCrudos.put(directory.getName() + " - " + tag.getTagName(), tag.getDescription());
-                }
-            }
-            builder.metadatosCrudos(metadatosCrudos);
 
             for (MetadataExtractor<MetadatosImagen.MetadatosImagenBuilder> extractor : extractores) {
                 try {
                     extractor.extraer(metadata, builder);
-                } catch (Exception ex) {
-                    System.err.println("Advertencia: El extractor " + extractor.getClass().getSimpleName() +
-                            " falló, pero el análisis continuará. Error: " + ex.getMessage());
+                } catch (Exception ignored) {
                 }
             }
 
-        } catch (Exception e) {
-            System.err.println("Error crítico procesando la imagen " + archivo.getName() + ": " + e.getMessage());
+        } catch (Exception ignored) {
         }
 
         return builder.build();
     }
 }
+

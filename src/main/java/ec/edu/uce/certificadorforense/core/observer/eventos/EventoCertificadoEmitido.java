@@ -1,7 +1,7 @@
 package ec.edu.uce.certificadorforense.core.observer.eventos;
 
 import ec.edu.uce.certificadorforense.core.model.certificado.Certificado;
-import ec.edu.uce.certificadorforense.core.observer.EventoSistema;
+import ec.edu.uce.certificadorforense.core.observerinterface.EventoSistema;
 import lombok.Getter;
 
 import java.time.Instant;

@@ -12,18 +12,10 @@ import java.util.Optional;
 
 /**
  * Adaptador de infraestructura: persistencia del expediente en archivo JSON.
- * <p>
- * <strong>Implementación temporal</strong> — cuando se elija el framework REST
- * (Spring Boot o Quarkus), este adaptador se reemplaza por uno PostgreSQL
- * sin modificar ninguna clase del {@code core}.
- * </p>
- *
- * <p>Los archivos se guardan en {@code resultados certificacion/expedientes/}.</p>
  */
 public class ExpedienteJsonAdapter implements ExpedienteRepositoryPort {
 
-    //hasta migrar a una base de datos 
-    private static final String DEFAULT_DIRECTORIO = "resultados_test_certificacion/expedientes";
+    private static final String DEFAULT_DIRECTORIO = System.getProperty("java.io.tmpdir") + File.separator + "expedientes";
     private final String directorio;
     private final Gson gson;
 
@@ -52,9 +44,6 @@ public class ExpedienteJsonAdapter implements ExpedienteRepositoryPort {
             Path rutaFirmada = dir.resolve(nombreFirmado);
             String wrapperJson = gson.toJson(new ExpedienteFirmadoWrapper(expedienteJson, firmaBase64));
             Files.writeString(rutaFirmada, wrapperJson, StandardCharsets.UTF_8);
-
-            System.out.println("[ExpedienteJsonAdapter] Expediente guardado: " + rutaFirmada.toAbsolutePath());
-
         } catch (IOException e) {
             throw new RuntimeException("Error guardando expediente: " + e.getMessage(), e);
         }
@@ -77,3 +66,4 @@ public class ExpedienteJsonAdapter implements ExpedienteRepositoryPort {
     /** Wrapper interno para el archivo firmado (expediente + firma). */
     private record ExpedienteFirmadoWrapper(String expedienteJson, String firmaBase64) {}
 }
+
