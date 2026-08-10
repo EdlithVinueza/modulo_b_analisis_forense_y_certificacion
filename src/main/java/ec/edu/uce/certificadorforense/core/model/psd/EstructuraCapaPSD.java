@@ -13,7 +13,7 @@ public class EstructuraCapaPSD {
     private final Tipo tipo;
     private final String blendModeKey;
     private final String blendModeNombre;
-    private final int opacidadRaw; // 0-255
+    private final int opacidadRaw;
     private final boolean visible;
     private final boolean bloqueada;
     private final boolean esClippingMask;

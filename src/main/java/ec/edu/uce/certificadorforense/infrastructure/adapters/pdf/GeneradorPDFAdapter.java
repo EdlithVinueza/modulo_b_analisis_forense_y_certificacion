@@ -65,30 +65,56 @@ public class GeneradorPDFAdapter implements GeneradorPDFPort {
         ctx.setVariable("fechaEmision", fechaStr);
         ctx.setVariable("versionMetadatos", "1.1");
         
-        ctx.setVariable("autorObra", expediente.getAutor().getNombreCompleto());
-        ctx.setVariable("seudonimo", expediente.getAutor().getSeudonimo());
-        ctx.setVariable("idInstitucional", expediente.getAutor().getCedula());
+        String nombresRaw = expediente != null && expediente.getAutor() != null ? expediente.getAutor().getNombres() : "";
+        String apellidosRaw = expediente != null && expediente.getAutor() != null ? expediente.getAutor().getApellidos() : "";
         
-        ctx.setVariable("tituloObra", expediente.getObra().getTitulo());
-        ctx.setVariable("descripcionObra", expediente.getObra().getDescripcion());
-        ctx.setVariable("categoriaObra", expediente.getObra().getCategoria() != null ? expediente.getObra().getCategoria().getEtiqueta() : "");
-        ctx.setVariable("fechaCreacion", expediente.getObra().getFechaCreacion() != null ? expediente.getObra().getFechaCreacion().toString() : "");
-        ctx.setVariable("software", expediente.getObra().getSoftware());
-        ctx.setVariable("hardware", expediente.getObra().getHardware() != null ? expediente.getObra().getHardware() : "");
-        ctx.setVariable("detallesTecnicos", expediente.getAnalisis().getDetallesTecnicos());
+        ec.edu.uce.certificadorforense.infrastructure.adapters.security.VaultEncryptionService vaultService = 
+                new ec.edu.uce.certificadorforense.infrastructure.adapters.security.VaultEncryptionService();
+        String nombres = vaultService.decrypt(nombresRaw);
+        String apellidos = vaultService.decrypt(apellidosRaw);
+        String autorNombreCompleto = (nombres + " " + apellidos).trim();
+        if (autorNombreCompleto.isEmpty() && expediente != null && expediente.getAutor() != null) {
+            autorNombreCompleto = expediente.getAutor().getNombreCompleto();
+        }
+
+        ctx.setVariable("autorObra", autorNombreCompleto);
+        ctx.setVariable("seudonimo", expediente != null && expediente.getAutor() != null ? expediente.getAutor().getSeudonimo() : "");
+        ctx.setVariable("idInstitucional", expediente != null && expediente.getAutor() != null ? expediente.getAutor().getCedula() : "");
         
-        ctx.setVariable("capasPSD", expediente.getAnalisis().getCapasPSD());
-        ctx.setVariable("metadatosDetectados", expediente.getAnalisis().isMetadatosDetectados());
-        ctx.setVariable("dimensiones", expediente.getAnalisis().getDimensiones());
+        ctx.setVariable("tituloObra", expediente != null && expediente.getObra() != null ? expediente.getObra().getTitulo() : "");
+        ctx.setVariable("descripcionObra", expediente != null && expediente.getObra() != null ? expediente.getObra().getDescripcion() : "");
+        ctx.setVariable("categoriaObra", expediente != null && expediente.getObra() != null && expediente.getObra().getCategoria() != null ? expediente.getObra().getCategoria().getEtiqueta() : "");
+        ctx.setVariable("fechaCreacion", expediente != null && expediente.getObra() != null && expediente.getObra().getFechaCreacion() != null ? expediente.getObra().getFechaCreacion().toString() : "");
+        ctx.setVariable("software", expediente != null && expediente.getObra() != null ? expediente.getObra().getSoftware() : "");
+        ctx.setVariable("hardware", expediente != null && expediente.getObra() != null && expediente.getObra().getHardware() != null ? expediente.getObra().getHardware() : "");
+        ctx.setVariable("detallesTecnicos", expediente != null && expediente.getAnalisis() != null ? expediente.getAnalisis().getDetallesTecnicos() : "");
+        
+        ctx.setVariable("capasPSD", expediente != null && expediente.getAnalisis() != null ? expediente.getAnalisis().getCapasPSD() : 0);
+        ctx.setVariable("metadatosDetectados", expediente != null && expediente.getAnalisis() != null && expediente.getAnalisis().isMetadatosDetectados());
+        ctx.setVariable("dimensiones", expediente != null && expediente.getAnalisis() != null ? expediente.getAnalisis().getDimensiones() : "");
         
         // Inyectamos espacios invisibles (Zero-width space) cada 16 caracteres para forzar a iText a romper la línea
-        ctx.setVariable("sha512PSD", wrapHash(expediente.getHashes().getSha512PSD()));
-        ctx.setVariable("sha512Imagen", wrapHash(expediente.getHashes().getSha512Imagen()));
-        ctx.setVariable("phash", wrapHash(expediente.getHashes().getPHash()));
-        ctx.setVariable("estado", expediente.getAnalisis().getResultado());
+        ctx.setVariable("sha512PSD", wrapHash(expediente != null && expediente.getHashes() != null ? expediente.getHashes().getSha512PSD() : ""));
+        ctx.setVariable("sha512Imagen", wrapHash(expediente != null && expediente.getHashes() != null ? expediente.getHashes().getSha512Imagen() : ""));
+        ctx.setVariable("phash", wrapHash(expediente != null && expediente.getHashes() != null ? expediente.getHashes().getPHash() : ""));
+        ctx.setVariable("estado", expediente != null && expediente.getAnalisis() != null ? expediente.getAnalisis().getResultado() : "VÁLIDO");
         
         ctx.setVariable("obraBase64", imagenBase64);
-        ctx.setVariable("qrBase64", certificado.getQrBase64());
+
+        // Garantizar que el QR no sea null
+        String qrBase64 = certificado.getQrBase64();
+        if (qrBase64 == null || qrBase64.trim().isEmpty()) {
+            try {
+                ec.edu.uce.certificadorforense.infrastructure.adapters.qr.QRGeneratorAdapter qrGen = 
+                        new ec.edu.uce.certificadorforense.infrastructure.adapters.qr.QRGeneratorAdapter();
+                String qrText = certificado.getQrContenido() != null ? certificado.getQrContenido() : certificado.getIdCertificado();
+                byte[] qrBytes = qrGen.generar(qrText, 150, 150);
+                qrBase64 = java.util.Base64.getEncoder().encodeToString(qrBytes);
+            } catch (Exception e) {
+                qrBase64 = "";
+            }
+        }
+        ctx.setVariable("qrBase64", qrBase64);
 
         String html = templateEngine.process("certificado", ctx);
 

@@ -1,14 +1,10 @@
 package ec.edu.uce.certificadorforense.core.observer.eventos;
 
-import ec.edu.uce.certificadorforense.core.observerinterface.EventoSistema;
+import ec.edu.uce.certificadorforense.core.observer.observerinterface.EventoSistema;
 import lombok.Getter;
 
 import java.time.Instant;
 
-/**
- * Evento disparado cuando el análisis forense de la Fase 1 concluye con
- * resultado APROBADO.
- */
 @Getter
 public class EventoAnalisisCompletado implements EventoSistema {
 

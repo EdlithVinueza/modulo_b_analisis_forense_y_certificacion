@@ -3,6 +3,10 @@ package ec.edu.uce.certificadorforense.core.service;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
+/**
+ * Calculador de Hashing Perceptual (pHash) en Java puro (sin dependencias nativas ni JavaFX).
+ * Normaliza la imagen a 8x8 píxeles en escala de grises y genera una huella binaria de 64 bits.
+ */
 public class CalculadorPHash {
 
     public String generarHash(BufferedImage imagen) {
@@ -11,8 +15,6 @@ public class CalculadorPHash {
         }
 
         // 1. Quitar transparencia (Canal Alpha) pintando sobre un lienzo blanco ANTES de escalar.
-        // Si escalamos primero, los píxeles transparentes (usualmente rgba(0,0,0,0)) promedian
-        // sus colores negros con los píxeles adyacentes, oscureciendo la miniatura.
         BufferedImage sinTransparencia = new BufferedImage(imagen.getWidth(), imagen.getHeight(), BufferedImage.TYPE_INT_RGB);
         Graphics2D g1 = sinTransparencia.createGraphics();
         g1.setColor(Color.WHITE);
@@ -28,7 +30,7 @@ public class CalculadorPHash {
         g2.drawImage(escala, 0, 0, null);
         g2.dispose();
 
-        // 2. Calcular brillo promedio
+        // 3. Calcular brillo promedio
         double sumaGris = 0;
         for (int y = 0; y < 8; y++) {
             for (int x = 0; x < 8; x++) {
@@ -37,7 +39,7 @@ public class CalculadorPHash {
         }
         double promedio = sumaGris / 64.0;
 
-        // 3. Generar cadena binaria de 64 bits
+        // 4. Generar cadena binaria de 64 bits
         StringBuilder hash = new StringBuilder();
         for (int y = 0; y < 8; y++) {
             for (int x = 0; x < 8; x++) {
@@ -57,7 +59,6 @@ public class CalculadorPHash {
                 distanciaHamming++;
             }
         }
-        // Retorna el porcentaje de parecido
-        return (1.0 - (distanciaHamming / 64.0)) * 100.0;
+        return (1.0 - (distanciaHamming / (double) hash1.length())) * 100.0;
     }
 }

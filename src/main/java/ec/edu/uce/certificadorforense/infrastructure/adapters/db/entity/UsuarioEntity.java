@@ -1,37 +1,43 @@
 package ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity;
 
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.Column;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+/**
+ * Entidad JPA que representa un Usuario en el sistema.
+ * Mapea la tabla "usuarios" en PostgreSQL.
+ * Utiliza Panache (Active Record) para las operaciones de base de datos.
+ */
 @Entity
 @Table(name = "usuarios")
 public class UsuarioEntity extends PanacheEntityBase {
 
     @Id
+    @GeneratedValue
     public UUID id;
 
-    @Column(nullable = false, unique = true, length = 20)
+    @Column(unique = true, nullable = false, columnDefinition = "TEXT")
     public String cedula;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, columnDefinition = "TEXT")
     public String nombres;
 
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, columnDefinition = "TEXT")
     public String apellidos;
 
-    @Column(nullable = false, unique = true, length = 150)
+    @Column(unique = true, nullable = false, columnDefinition = "TEXT")
     public String correo;
 
-    @Column(name = "nombre_artistico", length = 100)
+    @Column(name = "nombre_artistico", columnDefinition = "TEXT")
     public String nombreArtistico;
 
-    @Column(name = "password_hash", nullable = false)
+    @Column(name = "password_hash", columnDefinition = "TEXT")
     public String passwordHash;
+
+    @Column(name = "firma_p12", columnDefinition = "TEXT")
+    public String firmaP12;
 
     @Column(name = "acepta_terminos_plataforma")
     public Boolean aceptaTerminosPlataforma;
@@ -41,6 +47,13 @@ public class UsuarioEntity extends PanacheEntityBase {
 
     public Boolean activo;
 
-    @Column(name = "firma_p12", columnDefinition = "TEXT")
-    public String firmaP12;
+    @PrePersist
+    void prePersist() {
+        if (this.fechaRegistro == null) {
+            this.fechaRegistro = LocalDateTime.now();
+        }
+        if (this.activo == null) {
+            this.activo = true;
+        }
+    }
 }

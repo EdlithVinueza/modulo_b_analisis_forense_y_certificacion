@@ -7,27 +7,32 @@ import ec.edu.uce.certificadorforense.core.model.obra.Obra;
 import ec.edu.uce.certificadorforense.core.model.expediente.Expediente;
 import ec.edu.uce.certificadorforense.core.model.certificado.Certificado;
 import ec.edu.uce.certificadorforense.core.model.firma.FirmaAutor;
-import ec.edu.uce.certificadorforense.core.model.imagen.ArchivoImagen;
-import ec.edu.uce.certificadorforense.core.model.psd.ArchivoPSD;
+import ec.edu.uce.certificadorforense.core.model.modelimplement.imagen.ArchivoImagen;
+import ec.edu.uce.certificadorforense.core.model.modelimplement.psd.ArchivoPSD;
 import ec.edu.uce.certificadorforense.core.model.validacion.VeredictoFinal;
-import ec.edu.uce.certificadorforense.core.observerinterface.EventPublisher;
-import ec.edu.uce.certificadorforense.core.observerimplement.*;
+import ec.edu.uce.certificadorforense.core.observer.observerinterface.EventPublisher;
+import ec.edu.uce.certificadorforense.core.observer.observerimplement.*;
 import ec.edu.uce.certificadorforense.core.observer.eventos.*;
 import ec.edu.uce.certificadorforense.core.ports.out.*;
 import ec.edu.uce.certificadorforense.core.service.*;
-import ec.edu.uce.certificadorforense.core.state.*;
-import ec.edu.uce.certificadorforense.core.rules.imagen.*;
-import ec.edu.uce.certificadorforense.core.rules.psd.*;
-import ec.edu.uce.certificadorforense.infrastructure.adapters.esteganografia.EsteganografiaPNGAdapter;
-import ec.edu.uce.certificadorforense.infrastructure.adapters.esteganografia.EsteganografiaJPEGAdapter;
+import ec.edu.uce.certificadorforense.core.state.stateinterface.*;
+import ec.edu.uce.certificadorforense.core.state.stateimplement.*;
+import ec.edu.uce.certificadorforense.core.rules.rulesinterface.*;
+import ec.edu.uce.certificadorforense.core.rules.rulesimplement.imagen.*;
+import ec.edu.uce.certificadorforense.core.rules.rulesimplement.psd.*;
+import ec.edu.uce.certificadorforense.core.ports.out.FirmadorNubePort;
+import ec.edu.uce.certificadorforense.core.ports.out.SelladorInstitucionalPort;
+import ec.edu.uce.certificadorforense.infrastructure.adapters.inyeccion.InyeccionDatosPNGAdapter;
+import ec.edu.uce.certificadorforense.infrastructure.adapters.inyeccion.InyeccionDatosJPEGAdapter;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.firma.FirmadorP12Adapter;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.firma.FirmadorPDFAdapter;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.hash.SHA512Adapter;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.pdf.GeneradorPDFAdapter;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.processors.*;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.qr.QRGeneratorAdapter;
-import ec.edu.uce.certificadorforense.core.modelimplement.ArchivoBase;
+import ec.edu.uce.certificadorforense.core.model.modelimplement.ArchivoBase;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.*;
+import ec.edu.uce.certificadorforense.infrastructure.adapters.security.VaultEncryptionService;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
@@ -49,14 +54,16 @@ public class CertificacionOrchestrator {
     @jakarta.inject.Inject
     HistorialHelperService historialHelper;
 
+    /** Puerto de firma digital en la nube — implementado por IdentitySecurityAdapter. */
     @jakarta.inject.Inject
-    ec.edu.uce.certificadorforense.infrastructure.adapters.output.IdentitySecurityAdapter identitySecurityAdapter;
+    FirmadorNubePort firmadorNube;
+
+    /** Puerto de sellado institucional del PDF — implementado por VaultSealAdapter. */
+    @jakarta.inject.Inject
+    SelladorInstitucionalPort selladorInstitucional;
 
     @jakarta.inject.Inject
-    ec.edu.uce.certificadorforense.infrastructure.adapters.output.VaultSealAdapter vaultSealAdapter;
-
-    @jakarta.inject.Inject
-    ec.edu.uce.certificadorforense.infrastructure.adapters.security.VaultEncryptionService vaultEncryptionService;
+    VaultEncryptionService vaultEncryptionService;
 
     @org.eclipse.microprofile.config.inject.ConfigProperty(name = "tesis.cert.password")
     String certPassword;
@@ -283,9 +290,12 @@ public class CertificacionOrchestrator {
         if (contexto == null)
             throw new RuntimeException("Expediente expirado o no existe.");
 
+        String nombresDec = usuarioDb.nombres != null ? vaultEncryptionService.decrypt(usuarioDb.nombres) : "";
+        String apellidosDec = usuarioDb.apellidos != null ? vaultEncryptionService.decrypt(usuarioDb.apellidos) : "";
+
         Autor autor = Autor.builder()
-                .nombres(usuarioDb.nombres)
-                .apellidos(usuarioDb.apellidos)
+                .nombres(nombresDec)
+                .apellidos(apellidosDec)
                 .cedula(usuarioDb.cedula)
                 .correo(usuarioDb.correo)
                 .seudonimo(usuarioDb.nombreArtistico != null ? usuarioDb.nombreArtistico : "")
@@ -322,7 +332,7 @@ public class CertificacionOrchestrator {
         contexto.setDeclaraciones(decl);
 
         // Solo avanzamos el estado de la máquina si venimos de Análisis Forense
-        if (contexto.getEstadoActual() instanceof ec.edu.uce.certificadorforense.core.state.DatosObraState) {
+        if (contexto.getEstadoActual() instanceof ec.edu.uce.certificadorforense.core.state.stateimplement.DatosObraState) {
             contexto.getEstadoActual().avanzar(contexto); // Avanza a FirmaAutorState
         }
 
@@ -496,7 +506,9 @@ public class CertificacionOrchestrator {
 
         String firmaBase64;
         try {
-            firmaBase64 = identitySecurityAdapter.getAuthorDigitalSignature(p12Base64, password, hashObra);
+            firmaBase64 = firmadorNube.firmar(p12Base64, password, hashObra);
+        } catch (FirmadorNubePort.FirmaNubeException fne) {
+            throw new RuntimeException("Error de firma digital en la nube: " + fne.getMessage(), fne);
         } catch (jakarta.ws.rs.WebApplicationException we) {
             we.printStackTrace();
             String responseBody = we.getResponse().readEntity(String.class);
@@ -519,7 +531,7 @@ public class CertificacionOrchestrator {
                 .build();
         contexto.setFirmaAutor(firma);
 
-        if (contexto.getEstadoActual() instanceof ec.edu.uce.certificadorforense.core.state.FirmaAutorState) {
+        if (contexto.getEstadoActual() instanceof ec.edu.uce.certificadorforense.core.state.stateimplement.FirmaAutorState) {
             contexto.getEstadoActual().avanzar(contexto); // Avanza a CertificadoState
         }
 
@@ -581,25 +593,25 @@ public class CertificacionOrchestrator {
 
         byte[] pdfFirmado = pdfSinFirmar;
         try {
-            pdfFirmado = vaultSealAdapter.applyInstitutionalSeal(pdfSinFirmar, certPassword);
+            pdfFirmado = selladorInstitucional.sellar(pdfSinFirmar, certPassword);
         } catch (Exception ignored) {
         }
         contexto.setPdfCertificado(pdfFirmado);
 
-        // Esteganografia
+        // Inyección de Datos de Certificación en la Imagen
         String ext = contexto.getArchivoImagen().getMetadatos() != null && contexto.getArchivoImagen().getMetadatos().getExtensionReal() != null
                 ? contexto.getArchivoImagen().getMetadatos().getExtensionReal().toLowerCase()
                 : contexto.getArchivoImagen().getNombreArchivo().toLowerCase();
-        EsteganografiaPort estegano;
+        InyeccionDatosPort inyector;
         if (ext.contains("jpg") || ext.contains("jpeg")) {
-            estegano = new EsteganografiaJPEGAdapter();
+            inyector = new InyeccionDatosJPEGAdapter();
         } else {
-            estegano = new EsteganografiaPNGAdapter();
+            inyector = new InyeccionDatosPNGAdapter();
         }
 
-        String jsonEstegano = "{\"id\":\"" + certificado.getIdCertificado() + "\",\"hash\":\""
+        String jsonInyeccion = "{\"id\":\"" + certificado.getIdCertificado() + "\",\"hash\":\""
                 + certificado.getHashExpedienteFirmado() + "\"}";
-        byte[] imagenCert = estegano.inyectar(contexto.getImagenRaw(), jsonEstegano);
+        byte[] imagenCert = inyector.inyectar(contexto.getImagenRaw(), jsonInyeccion);
         contexto.setImagenCertificada(imagenCert);
 
         // Persistencia Final DB

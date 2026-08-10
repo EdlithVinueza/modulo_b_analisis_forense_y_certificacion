@@ -1,25 +1,25 @@
 package ec.edu.uce.certificadorforense;
 
-import ec.edu.uce.certificadorforense.core.modelimplement.ArchivoBase;
-import ec.edu.uce.certificadorforense.core.model.imagen.ArchivoImagen;
-import ec.edu.uce.certificadorforense.core.model.psd.ArchivoPSD;
+import ec.edu.uce.certificadorforense.core.model.modelimplement.ArchivoBase;
+import ec.edu.uce.certificadorforense.core.model.modelimplement.imagen.ArchivoImagen;
+import ec.edu.uce.certificadorforense.core.model.modelimplement.psd.ArchivoPSD;
 import ec.edu.uce.certificadorforense.core.model.validacion.VeredictoFinal;
 import ec.edu.uce.certificadorforense.core.ports.out.ArchivoProcessorPort;
-import ec.edu.uce.certificadorforense.core.rules.imagen.ReglaAnalisisOrigen;
-import ec.edu.uce.certificadorforense.core.rules.imagen.ReglaCoherenciaDpi;
-import ec.edu.uce.certificadorforense.core.rules.imagen.ReglaFirmaEstructural;
-import ec.edu.uce.certificadorforense.core.rules.psd.ReglaComplejidadDiseno;
-import ec.edu.uce.certificadorforense.core.rules.psd.ReglaFormatoPsd;
-import ec.edu.uce.certificadorforense.core.rules.psd.ReglaImagenPegada;
-import ec.edu.uce.certificadorforense.core.rules.psd.ReglaResolucionProfesional;
+import ec.edu.uce.certificadorforense.core.rules.rulesimplement.imagen.ReglaAnalisisOrigen;
+import ec.edu.uce.certificadorforense.core.rules.rulesimplement.imagen.ReglaCoherenciaDpi;
+import ec.edu.uce.certificadorforense.core.rules.rulesimplement.imagen.ReglaFirmaEstructural;
+import ec.edu.uce.certificadorforense.core.rules.rulesimplement.psd.ReglaComplejidadDiseno;
+import ec.edu.uce.certificadorforense.core.rules.rulesimplement.psd.ReglaFormatoPsd;
+import ec.edu.uce.certificadorforense.core.rules.rulesimplement.psd.ReglaImagenPegada;
+import ec.edu.uce.certificadorforense.core.rules.rulesimplement.psd.ReglaResolucionProfesional;
 import ec.edu.uce.certificadorforense.core.service.ArchivoProcessorFactory;
 import ec.edu.uce.certificadorforense.core.service.ValidadorGenericoService;
 import ec.edu.uce.certificadorforense.core.service.CalculadorPHash;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.processors.ArchivoImagenProcessor;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.processors.ArchivoPSDProcessor;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.processors.ImageLoader;
-import ec.edu.uce.certificadorforense.core.rules.imagen.*;
-import ec.edu.uce.certificadorforense.core.rules.psd.*;
+import ec.edu.uce.certificadorforense.core.rules.rulesimplement.imagen.*;
+import ec.edu.uce.certificadorforense.core.rules.rulesimplement.psd.*;
 
 import java.awt.image.BufferedImage;
 import java.io.File;

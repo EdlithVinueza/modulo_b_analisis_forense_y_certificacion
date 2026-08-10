@@ -10,32 +10,15 @@ import java.util.regex.Pattern;
 @AllArgsConstructor
 public class MetadatosPSD {
 
-    // ========== CABECERA PSD ==========
-    private int cantidadCanales;
     private int altoImagen;
     private int anchoImagen;
-    private int bitsPorCanal;
-    private String modoColor;
 
-    // ========== DIRECTORIO PHOTOSHOP ==========
     private String infoResolucion;
-    private String infoEstadoCapas;
     private String datosMiniatura;
 
-    // ========== TIPO DE ARCHIVO ==========
     private String nombreArchivoDetectado;
-
-    // ========== METADATOS EXTRA ==========
     private String software;
 
-    // ========== PERFIL ICC ==========
-    private boolean tienePerfilIcc;
-    private String descripcionPerfilIcc;
-    private String clasePerfilIcc;
-    private String espacioColorIcc;
-    private String copyrightIcc;
-
-    // --- Lógica para DPI ---
     private static final Pattern DPI_PATTERN = Pattern.compile("(\\d+(?:[.,]\\d+)?)");
 
     public double getDpiHorizontal() {
@@ -77,4 +60,3 @@ public class MetadatosPSD {
         return valores;
     }
 }
-

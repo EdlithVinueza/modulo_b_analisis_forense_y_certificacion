@@ -1,7 +1,7 @@
 package ec.edu.uce.certificadorforense.infrastructure.adapters.processors;
 
 import ec.edu.uce.certificadorforense.core.ports.out.ArchivoProcessorPort;
-import ec.edu.uce.certificadorforense.core.model.psd.ArchivoPSD;
+import ec.edu.uce.certificadorforense.core.model.modelimplement.psd.ArchivoPSD;
 import ec.edu.uce.certificadorforense.core.model.psd.MetadatosPSD;
 import ec.edu.uce.certificadorforense.core.model.psd.EstructuraCapaPSD;
 
@@ -45,6 +45,7 @@ public class ArchivoPSDProcessor implements ArchivoProcessorPort<ArchivoPSD> {
 
         // Fusionar en el objeto del dominio
         return ArchivoPSD.builder()
+                .archivo(file)
                 .nombreArchivo(file.getName())
                 .contenidoBytes(bytes)
                 .tamanoBytes(file.length())

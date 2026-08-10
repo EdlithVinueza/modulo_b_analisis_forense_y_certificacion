@@ -14,11 +14,8 @@ public class MetadatosPSDService {
     private final List<MetadataExtractor<MetadatosPSD.MetadatosPSDBuilder>> extractors;
 
     public MetadatosPSDService() {
-        // Ordenados de MENOS fiable a MÁS fiable (Last-Win)
         this.extractors = Arrays.asList(
-                new Jfif(),      // Muy genérico (prioridad baja)
                 new Exif(),      // Datos de cámara/motor (prioridad media)
-                new Iptc(),      // Datos de prensa (prioridad media)
                 new Xmp(),       // Datos Adobe (prioridad alta)
                 new Photoshop(), // Recursos específicos (prioridad alta)
                 new PsdHeader(), // LA VERDAD BINARIA (prioridad máxima)

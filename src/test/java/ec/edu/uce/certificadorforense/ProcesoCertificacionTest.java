@@ -9,19 +9,21 @@ import ec.edu.uce.certificadorforense.core.model.obra.Obra;
 import ec.edu.uce.certificadorforense.core.model.expediente.Expediente;
 import ec.edu.uce.certificadorforense.core.model.certificado.Certificado;
 import ec.edu.uce.certificadorforense.core.model.firma.FirmaAutor;
-import ec.edu.uce.certificadorforense.core.model.imagen.ArchivoImagen;
-import ec.edu.uce.certificadorforense.core.model.psd.ArchivoPSD;
+import ec.edu.uce.certificadorforense.core.model.modelimplement.imagen.ArchivoImagen;
+import ec.edu.uce.certificadorforense.core.model.modelimplement.psd.ArchivoPSD;
 import ec.edu.uce.certificadorforense.core.model.validacion.VeredictoFinal;
-import ec.edu.uce.certificadorforense.core.observerinterface.EventPublisher;
+import ec.edu.uce.certificadorforense.core.observer.observerinterface.EventPublisher;
 import ec.edu.uce.certificadorforense.core.observer.eventos.*;
-import ec.edu.uce.certificadorforense.core.observerimplement.*;
+import ec.edu.uce.certificadorforense.core.observer.observerimplement.*;
 import ec.edu.uce.certificadorforense.core.ports.out.*;
 import ec.edu.uce.certificadorforense.core.service.*;
-import ec.edu.uce.certificadorforense.core.state.*;
-import ec.edu.uce.certificadorforense.core.rules.imagen.*;
-import ec.edu.uce.certificadorforense.core.rules.psd.*;
-import ec.edu.uce.certificadorforense.infrastructure.adapters.esteganografia.EsteganografiaPNGAdapter;
-import ec.edu.uce.certificadorforense.infrastructure.adapters.esteganografia.EsteganografiaJPEGAdapter;
+import ec.edu.uce.certificadorforense.core.state.stateinterface.*;
+import ec.edu.uce.certificadorforense.core.state.stateimplement.*;
+import ec.edu.uce.certificadorforense.core.rules.rulesinterface.*;
+import ec.edu.uce.certificadorforense.core.rules.rulesimplement.imagen.*;
+import ec.edu.uce.certificadorforense.core.rules.rulesimplement.psd.*;
+import ec.edu.uce.certificadorforense.infrastructure.adapters.inyeccion.InyeccionDatosPNGAdapter;
+import ec.edu.uce.certificadorforense.infrastructure.adapters.inyeccion.InyeccionDatosJPEGAdapter;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.firma.FirmadorP12Adapter;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.firma.FirmadorPDFAdapter;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.hash.SHA512Adapter;
@@ -31,7 +33,7 @@ import ec.edu.uce.certificadorforense.infrastructure.adapters.processors.*;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.qr.QRGeneratorAdapter;
 import ec.edu.uce.certificadorforense.core.service.ArchivoProcessorFactory;
 import ec.edu.uce.certificadorforense.core.ports.out.ArchivoProcessorPort;
-import ec.edu.uce.certificadorforense.core.modelimplement.ArchivoBase;
+import ec.edu.uce.certificadorforense.core.model.modelimplement.ArchivoBase;
 import ec.edu.uce.certificadorforense.core.service.ValidadorGenericoService;
 import ec.edu.uce.certificadorforense.core.service.CalculadorPHash;
 
@@ -95,11 +97,11 @@ public class ProcesoCertificacionTest {
         FirmadorPDFPort firmadorPDF = new FirmadorPDFAdapter(rutaRootCa);
         GeneradorPDFPort generadorPDF = new GeneradorPDFAdapter();
         
-        EsteganografiaPort estegano;
+        InyeccionDatosPort inyector;
         if (extension.equalsIgnoreCase("jpg") || extension.equalsIgnoreCase("jpeg")) {
-            estegano = new EsteganografiaJPEGAdapter();
+            inyector = new InyeccionDatosJPEGAdapter();
         } else {
-            estegano = new EsteganografiaPNGAdapter();
+            inyector = new InyeccionDatosPNGAdapter();
         }
         
         ExpedienteRepositoryPort repositorio = new ExpedienteJsonAdapter(DIRECTORIO_SALIDA + "/expedientes");
@@ -133,12 +135,12 @@ public class ProcesoCertificacionTest {
         AnalisisForenseState estadoInicial = new AnalisisForenseState();
         ContextoProceso contexto = new ContextoProceso(estadoInicial);
 
-        EventPublisher publisher = new EventPublisher();
+        EventPublisher publisher = new EventPublisherImpl();
         publisher.suscribir(new HashGeneratorListener(hashPort, contexto));
         publisher.suscribir(new MetadataExtractorListener(contexto));
         publisher.suscribir(new CapasExtractorListener(contexto));
         publisher.suscribir(new ExpedienteListener(repositorio));
-        publisher.suscribir(new AuditoriaListener(DIRECTORIO_SALIDA + "/auditoria.log"));
+        publisher.suscribir(new HistorialObserver());
         publisher.suscribir(new PDFGeneratorListener(contexto));
 
         // ══════════════════════════════════════════════════════════════════════
@@ -290,17 +292,17 @@ public class ProcesoCertificacionTest {
             contexto.setPdfCertificado(pdfSinFirmar);
         }
 
-        // Esteganografía
-        String jsonEstegano = "{\"id\":\"" + certificado.getIdCertificado()
+        // Inyección de Datos
+        String jsonInyeccion = "{\"id\":\"" + certificado.getIdCertificado()
                 + "\",\"hash\":\"" + certificado.getHashExpedienteFirmado() + "\"}";
         byte[] imagenCert = null;
         try {
             byte[] imgBytes = Files.readAllBytes(archivoImagen.toPath());
-            imagenCert = estegano.inyectar(imgBytes, jsonEstegano);
+            imagenCert = inyector.inyectar(imgBytes, jsonInyeccion);
             contexto.setImagenCertificada(imagenCert);
-            assertNotNull(imagenCert, "No se inyectó esteganografía");
+            assertNotNull(imagenCert, "No se inyectaron datos");
         } catch (Exception e) {
-            fail("Falló la esteganografía: " + e.getMessage());
+            fail("Falló la inyección de datos: " + e.getMessage());
         }
 
         Path dirSalida = Paths.get(DIRECTORIO_SALIDA);

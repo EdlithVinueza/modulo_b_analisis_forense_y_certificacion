@@ -11,8 +11,7 @@ public class Png implements MetadataExtractor<MetadatosImagen.MetadatosImagenBui
         com.drew.metadata.png.PngDirectory ihdr = metadata.getFirstDirectoryOfType(com.drew.metadata.png.PngDirectory.class);
         if (ihdr != null) {
             builder.ancho(ihdr.getInteger(com.drew.metadata.png.PngDirectory.TAG_IMAGE_WIDTH))
-                    .alto(ihdr.getInteger(com.drew.metadata.png.PngDirectory.TAG_IMAGE_HEIGHT))
-                    .tipoColor(ihdr.getDescription(com.drew.metadata.png.PngDirectory.TAG_COLOR_TYPE));
+                    .alto(ihdr.getInteger(com.drew.metadata.png.PngDirectory.TAG_IMAGE_HEIGHT));
         }
 
         for (com.drew.metadata.Directory dir : metadata.getDirectories()) {

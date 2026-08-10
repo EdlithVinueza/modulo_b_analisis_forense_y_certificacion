@@ -1,10 +1,6 @@
 package ec.edu.uce.certificadorforense.core.model.obra;
 
-/**
- * Categorías de obra digital reconocidas por el sistema Verisart.
- */
 public enum CategoriaObra {
-
     ILUSTRACION("Ilustración"),
     DISENO_GRAFICO("Diseño gráfico"),
     ARTE_CONCEPTUAL("Arte conceptual"),

@@ -19,7 +19,7 @@ public class MetadatosImagenService {
                 new FileType(), // Identifica formato y extensión
                 new Png(),      // Datos PNG (pHYs, gAMA, sRGB)
                 new Jpeg(),     // Dimensiones JPG
-                new Jfif(),     // DPI de JPG
+                new Jfif(),     // DPI de JPG (necesario para CoherenciaDpi)
                 new Exif(),     // Respaldo de DPI y software
                 new Xmp(),      // Metadatos extendidos (Software)
                 new Icc()       // Perfil de color

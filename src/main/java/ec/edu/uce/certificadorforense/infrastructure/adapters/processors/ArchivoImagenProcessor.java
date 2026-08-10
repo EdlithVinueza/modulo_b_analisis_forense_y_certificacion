@@ -1,7 +1,7 @@
 package ec.edu.uce.certificadorforense.infrastructure.adapters.processors;
 
 import ec.edu.uce.certificadorforense.core.ports.out.ArchivoProcessorPort;
-import ec.edu.uce.certificadorforense.core.model.imagen.ArchivoImagen;
+import ec.edu.uce.certificadorforense.core.model.modelimplement.imagen.ArchivoImagen;
 import ec.edu.uce.certificadorforense.core.model.imagen.MetadatosImagen;
 import ec.edu.uce.certificadorforense.core.model.imagen.EstructuraImagen;
 
@@ -43,6 +43,7 @@ public class ArchivoImagenProcessor implements ArchivoProcessorPort<ArchivoImage
 
         // 3. Fusionar en el objeto del dominio
         return ArchivoImagen.builder()
+                .archivo(file)
                 .nombreArchivo(file.getName())
                 .contenidoBytes(bytes)
                 .tamanoBytes(file.length())

@@ -11,11 +11,8 @@ public class PsdHeader implements MetadataExtractor<MetadatosPSD.MetadatosPSDBui
     public void extraer(Metadata metadata, MetadatosPSD.MetadatosPSDBuilder builder) {
         PsdHeaderDirectory directory = metadata.getFirstDirectoryOfType(PsdHeaderDirectory.class);
         if (directory != null) {
-            builder.cantidadCanales(directory.getInteger(PsdHeaderDirectory.TAG_CHANNEL_COUNT))
-                   .altoImagen(directory.getInteger(PsdHeaderDirectory.TAG_IMAGE_HEIGHT))
-                   .anchoImagen(directory.getInteger(PsdHeaderDirectory.TAG_IMAGE_WIDTH))
-                   .bitsPorCanal(directory.getInteger(PsdHeaderDirectory.TAG_BITS_PER_CHANNEL))
-                   .modoColor(directory.getDescription(PsdHeaderDirectory.TAG_COLOR_MODE));
+            builder.altoImagen(directory.getInteger(PsdHeaderDirectory.TAG_IMAGE_HEIGHT))
+                   .anchoImagen(directory.getInteger(PsdHeaderDirectory.TAG_IMAGE_WIDTH));
         }
     }
 }

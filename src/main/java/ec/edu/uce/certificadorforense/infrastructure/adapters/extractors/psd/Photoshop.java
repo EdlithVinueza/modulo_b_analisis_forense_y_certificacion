@@ -12,7 +12,6 @@ public class Photoshop implements MetadataExtractor<MetadatosPSD.MetadatosPSDBui
         PhotoshopDirectory directory = metadata.getFirstDirectoryOfType(PhotoshopDirectory.class);
         if (directory != null) {
             builder.infoResolucion(directory.getDescription(PhotoshopDirectory.TAG_RESOLUTION_INFO))
-                   .infoEstadoCapas(directory.getDescription(PhotoshopDirectory.TAG_LAYER_STATE_INFORMATION))
                    .datosMiniatura(directory.getDescription(PhotoshopDirectory.TAG_THUMBNAIL_OLD));
         }
     }

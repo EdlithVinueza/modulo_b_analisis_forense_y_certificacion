@@ -3,9 +3,9 @@ package ec.edu.uce.certificadorforense.application.service;
 import ec.edu.uce.certificadorforense.core.model.certificado.Certificado;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.CertificadoEntity;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.ExpedienteForenseEntity;
-import ec.edu.uce.certificadorforense.infrastructure.adapters.esteganografia.EsteganografiaJPEGAdapter;
-import ec.edu.uce.certificadorforense.infrastructure.adapters.esteganografia.EsteganografiaPNGAdapter;
-import ec.edu.uce.certificadorforense.core.ports.out.EsteganografiaPort;
+import ec.edu.uce.certificadorforense.infrastructure.adapters.inyeccion.InyeccionDatosJPEGAdapter;
+import ec.edu.uce.certificadorforense.infrastructure.adapters.inyeccion.InyeccionDatosPNGAdapter;
+import ec.edu.uce.certificadorforense.core.ports.out.InyeccionDatosPort;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.pdf.GeneradorPDFAdapter;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -67,16 +67,16 @@ public class RecuperacionCertificadoService {
         GeneradorPDFAdapter generadorPDF = new GeneradorPDFAdapter();
         byte[] pdfGenerado = generadorPDF.generar(certModelo, expedienteOriginal, certDb.expedienteFirmadoRaw, imagenBase64);
 
-        // Esteganografia
-        EsteganografiaPort estegano;
+        // Inyección de Datos
+        InyeccionDatosPort inyector;
         if (extension.equalsIgnoreCase("jpg") || extension.equalsIgnoreCase("jpeg")) {
-            estegano = new EsteganografiaJPEGAdapter();
+            inyector = new InyeccionDatosJPEGAdapter();
         } else {
-            estegano = new EsteganografiaPNGAdapter();
+            inyector = new InyeccionDatosPNGAdapter();
         }
         
-        String jsonEstegano = "{\"id\":\"" + certModelo.getIdCertificado() + "\",\"hash\":\"" + certModelo.getHashExpedienteFirmado() + "\"}";
-        byte[] imagenCert = estegano.inyectar(imagenRaw, jsonEstegano);
+        String jsonInyeccion = "{\"id\":\"" + certModelo.getIdCertificado() + "\",\"hash\":\"" + certModelo.getHashExpedienteFirmado() + "\"}";
+        byte[] imagenCert = inyector.inyectar(imagenRaw, jsonInyeccion);
 
         // Generar Zip
         java.io.ByteArrayOutputStream baosZip = new java.io.ByteArrayOutputStream();

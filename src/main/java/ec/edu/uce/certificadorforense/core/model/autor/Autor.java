@@ -1,43 +1,27 @@
 package ec.edu.uce.certificadorforense.core.model.autor;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.ToString;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-/**
- * Representa al autor de la obra digital que solicita la certificación.
- */
 @Getter
+@Setter
 @Builder
-@ToString
+@NoArgsConstructor
+@AllArgsConstructor
 public class Autor {
+    private String nombres;
+    private String apellidos;
+    private String cedula;
+    private String correo;
+    private String seudonimo;
 
-    /** Nombres del autor. */
-    private final String nombres;
-
-    /** Apellidos del autor. */
-    private final String apellidos;
-
-    /** Número de cédula de identidad. */
-    private final String cedula;
-
-    /** Correo electrónico del autor. */
-    private final String correo;
-
-    /** Seudónimo artístico (opcional, puede ser null o vacío). */
-    private final String seudonimo;
-
-    /**
-     * Devuelve el nombre completo (nombres + apellidos).
-     */
+    /** Nombre completo concatenado para display. */
     public String getNombreCompleto() {
-        return nombres + " " + apellidos;
-    }
-
-    /**
-     * Indica si el autor tiene seudónimo registrado.
-     */
-    public boolean tieneSeudonimo() {
-        return seudonimo != null && !seudonimo.isBlank();
+        String n = nombres != null ? nombres : "";
+        String a = apellidos != null ? apellidos : "";
+        return (n + " " + a).trim();
     }
 }

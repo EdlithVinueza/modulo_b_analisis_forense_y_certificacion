@@ -14,9 +14,11 @@ public class ForenseExceptionHandler implements ExceptionMapper<Exception> {
 
     @Override
     public Response toResponse(Exception exception) {
-        // Aquí se puede añadir lógica para evaluar el tipo de excepción personalizada
-        // (Ej: ArchivoNoSoportadoException, ReglaForenseFallidaException)
-        
+        if (exception instanceof jakarta.ws.rs.NotFoundException) {
+            return Response.status(Response.Status.NOT_FOUND).entity("{\"error\": \"Ruta no encontrada\"}").build();
+        }
+
+        exception.printStackTrace();
         String errorCode = "ERROR_FORENSE_INTERNO";
         String mensaje = "Ocurrió un error en la validación técnica.";
         int status = Response.Status.BAD_REQUEST.getStatusCode();

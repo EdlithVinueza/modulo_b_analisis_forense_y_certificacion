@@ -3,7 +3,7 @@ package ec.edu.uce.certificadorforense.core.service;
 import ec.edu.uce.certificadorforense.core.model.expediente.AnalisisResumen;
 import ec.edu.uce.certificadorforense.core.model.expediente.Expediente;
 import ec.edu.uce.certificadorforense.core.model.expediente.HashesEvidencia;
-import ec.edu.uce.certificadorforense.core.state.ContextoProceso;
+import ec.edu.uce.certificadorforense.core.state.stateimplement.ContextoProceso;
 
 import java.time.Instant;
 import java.time.Year;
@@ -37,9 +37,7 @@ public class ExpedienteService {
                 ? contexto.getObra().getCategoria().getEtiqueta() : "";
         String dpiStr = contexto.getArchivoPSD() != null && contexto.getArchivoPSD().getMetadatos() != null 
                 ? String.format("%.0f", contexto.getArchivoPSD().getMetadatos().getDpiHorizontal()) : "";
-        String modoColorStr = contexto.getArchivoPSD() != null && contexto.getArchivoPSD().getMetadatos() != null 
-                ? contexto.getArchivoPSD().getMetadatos().getModoColor() : "";
-        String detallesTecnicosStr = categoriaStr + ", " + dpiStr + " DPI, " + modoColorStr;
+        String detallesTecnicosStr = categoriaStr + ", " + dpiStr + " DPI";
 
         AnalisisResumen analisis = AnalisisResumen.builder()
                 .resultado(contexto.getVeredictoPSD().isEsRechazado()
@@ -69,11 +67,12 @@ public class ExpedienteService {
 
     /**
      * Genera un ID único para el expediente.
-     * Formato: {@code EXP-YYYY-NNNNNN} (ej. {@code EXP-2026-000001}).
+     * Formato: {@code EXP-YYYY-NNNNNN} garantizando unicidad en base de datos.
      */
     private String generarId() {
         int anio = Year.now().getValue();
-        int numero = CONTADOR.getAndIncrement();
-        return String.format("EXP-%d-%06d", anio, numero);
+        long timestamp = System.currentTimeMillis() % 1000000;
+        int random = (int) (Math.random() * 900 + 100);
+        return String.format("EXP-%d-%06d%03d", anio, timestamp, random);
     }
 }

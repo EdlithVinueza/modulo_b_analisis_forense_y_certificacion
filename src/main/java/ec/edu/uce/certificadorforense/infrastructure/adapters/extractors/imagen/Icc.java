@@ -9,8 +9,7 @@ public class Icc implements MetadataExtractor<MetadatosImagen.MetadatosImagenBui
     public void extraer(Metadata metadata, MetadatosImagen.MetadatosImagenBuilder builder) {
         com.drew.metadata.icc.IccDirectory dir = metadata.getFirstDirectoryOfType(com.drew.metadata.icc.IccDirectory.class);
         if (dir != null) {
-            builder.tienePerfilIcc(true)
-                    .descripcionPerfilIcc(dir.getDescription(com.drew.metadata.icc.IccDirectory.TAG_TAG_desc));
+            builder.tienePerfilIcc(true);
         }
     }
 }

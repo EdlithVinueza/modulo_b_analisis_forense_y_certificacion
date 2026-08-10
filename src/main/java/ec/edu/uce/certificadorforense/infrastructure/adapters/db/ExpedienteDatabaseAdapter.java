@@ -14,7 +14,12 @@ import java.util.UUID;
 /**
  * Adaptador de Infraestructura para guardar expedientes en PostgreSQL.
  * Implementa el puerto de salida del Core sin acoplar el dominio a Hibernate.
+ *
+ * @deprecated Este adaptador no se usa en el flujo activo del Orquestador.
+ * La persistencia se maneja directamente en {@code CertificacionOrchestrator}
+ * con acceso JPA inline. Se mantiene como implementación de referencia del puerto.
  */
+@Deprecated
 @ApplicationScoped
 public class ExpedienteDatabaseAdapter implements ExpedienteRepositoryPort {
 

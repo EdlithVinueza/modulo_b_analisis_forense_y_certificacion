@@ -1,23 +1,12 @@
 package ec.edu.uce.certificadorforense.core.observer.eventos;
 
-import ec.edu.uce.certificadorforense.core.model.imagen.ArchivoImagen;
-import ec.edu.uce.certificadorforense.core.model.psd.ArchivoPSD;
-import ec.edu.uce.certificadorforense.core.observerinterface.EventoSistema;
+import ec.edu.uce.certificadorforense.core.model.modelimplement.imagen.ArchivoImagen;
+import ec.edu.uce.certificadorforense.core.model.modelimplement.psd.ArchivoPSD;
+import ec.edu.uce.certificadorforense.core.observer.observerinterface.EventoSistema;
 import lombok.Getter;
 
 import java.time.Instant;
 
-/**
- * Evento disparado al cargar el PSD y la imagen en la Fase 1.
- * <p>
- * Los listeners suscritos a este evento ejecutan:
- * <ul>
- *   <li>{@code HashGeneratorListener} → calcula SHA512 PSD + imagen.</li>
- *   <li>{@code MetadataExtractorListener} → extrae metadatos.</li>
- *   <li>{@code CapasExtractorListener} → extrae capas PSD.</li>
- * </ul>
- * </p>
- */
 @Getter
 public class EventoAnalisisIniciado implements EventoSistema {
 

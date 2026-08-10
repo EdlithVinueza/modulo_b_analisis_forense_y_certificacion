@@ -1,9 +1,9 @@
 package ec.edu.uce.certificadorforense.core.service;
 
-import ec.edu.uce.certificadorforense.core.modelimplement.ArchivoBase;
+import ec.edu.uce.certificadorforense.core.model.modelimplement.ArchivoBase;
 import ec.edu.uce.certificadorforense.core.model.validacion.ResultadoValidacion;
 import ec.edu.uce.certificadorforense.core.model.validacion.VeredictoFinal;
-import ec.edu.uce.certificadorforense.core.rules.IReglaValidacion;
+import ec.edu.uce.certificadorforense.core.rules.rulesinterface.IReglaValidacion;
 
 import java.util.ArrayList;
 import java.util.List;

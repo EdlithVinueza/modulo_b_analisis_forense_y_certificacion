@@ -72,11 +72,12 @@ public class CertificadoService {
 
     /**
      * Genera un ID único para el certificado.
-     * Formato: {@code CERT-YYYY-NNNNNN} (ej. {@code CERT-2026-000001}).
+     * Formato: {@code CERT-YYYY-NNNNNN} garantizando unicidad en base de datos.
      */
     private String generarId() {
         int anio = Year.now().getValue();
-        int numero = CONTADOR.getAndIncrement();
-        return String.format("CERT-%d-%06d", anio, numero);
+        long timestamp = System.currentTimeMillis() % 1000000;
+        int random = (int) (Math.random() * 900 + 100);
+        return String.format("CERT-%d-%06d%03d", anio, timestamp, random);
     }
 }

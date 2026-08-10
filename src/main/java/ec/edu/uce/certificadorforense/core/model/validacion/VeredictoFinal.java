@@ -22,7 +22,6 @@ public class VeredictoFinal {
         if (res.isEsValido()) {
             this.reglasExitosas++;
         } else if (critica) {
-            // Si falla y es crítica, marcamos el descarte total
             this.esRechazado = true;
             this.razonRechazo = res.getNombreRegla();
         }
