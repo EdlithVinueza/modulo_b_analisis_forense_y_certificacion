@@ -1,6 +1,8 @@
 package ec.edu.uce.certificadorforense.core.service;
 
 import ec.edu.uce.certificadorforense.core.ports.out.GeneradorHashPort;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 
 /**
  * Servicio de dominio: cálculo de hashes SHA-512.
@@ -9,10 +11,12 @@ import ec.edu.uce.certificadorforense.core.ports.out.GeneradorHashPort;
  * métodos convenientes para los distintos casos de uso.
  * </p>
  */
+@ApplicationScoped
 public class HashSHA512Service {
 
     private final GeneradorHashPort generadorHash;
 
+    @Inject
     public HashSHA512Service(GeneradorHashPort generadorHash) {
         this.generadorHash = generadorHash;
     }
@@ -35,5 +39,16 @@ public class HashSHA512Service {
      */
     public String calcular(String texto) {
         return generadorHash.calcularSHA512(texto);
+    }
+
+    /**
+     * Calcula SHA-512 de un archivo leyéndolo por bloques (PSD/imagen), sin
+     * cargarlo completo en memoria.
+     *
+     * @param archivo Archivo a hashear.
+     * @return Hash hexadecimal de 128 caracteres.
+     */
+    public String calcular(java.io.File archivo) throws java.io.IOException {
+        return generadorHash.calcularSHA512(archivo);
     }
 }

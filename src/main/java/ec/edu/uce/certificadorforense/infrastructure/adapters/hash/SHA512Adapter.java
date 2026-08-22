@@ -1,6 +1,7 @@
 package ec.edu.uce.certificadorforense.infrastructure.adapters.hash;
 
 import ec.edu.uce.certificadorforense.core.ports.out.GeneradorHashPort;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -14,6 +15,7 @@ import java.security.DigestInputStream;
  * Adaptador de infraestructura: cálculo SHA-512 con {@code java.security.MessageDigest}.
  * Sin dependencias externas.
  */
+@ApplicationScoped
 public class SHA512Adapter implements GeneradorHashPort {
 
     @Override

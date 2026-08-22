@@ -15,7 +15,7 @@ import java.io.File;
 @ApplicationScoped
 public class VaultSealAdapter implements SelladorInstitucionalPort {
 
-    @ConfigProperty(name = "tesis.cert.path", defaultValue = "C:/Users/edlit/OneDrive/Documentos/TESIS/Archivos de Prueba/firma .p12/firma_9900000003.p12")
+    @ConfigProperty(name = "tesis.cert.path")
     String rutaCertificado;
 
     @Override

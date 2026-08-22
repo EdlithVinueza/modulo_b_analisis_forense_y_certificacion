@@ -1,6 +1,8 @@
 package ec.edu.uce.certificadorforense.infrastructure.adapters.inyeccion;
 
 import ec.edu.uce.certificadorforense.core.ports.out.InyeccionDatosPort;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Named;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
@@ -19,6 +21,8 @@ import java.nio.charset.StandardCharsets;
  *
  * <p>El segmento se inserta inmediatamente después del marcador SOI ({@code FF D8}).</p>
  */
+@ApplicationScoped
+@Named("jpeg")
 public class InyeccionDatosJPEGAdapter implements InyeccionDatosPort {
 
     private static final byte MARKER_FF = (byte) 0xFF;

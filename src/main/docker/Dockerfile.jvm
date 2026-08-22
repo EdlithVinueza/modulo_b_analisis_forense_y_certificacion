@@ -1,0 +1,34 @@
+####
+# Imagen de despliegue para Módulo B (Análisis Forense y Certificación).
+#
+# Build (desde la raíz del módulo):
+#   ./gradlew build -x test
+#   docker build -f src/main/docker/Dockerfile.jvm -t modulo-b-certificacion .
+#
+# Pensada para Azure Container Apps / Azure App Service for Containers:
+# - Puerto configurable vía la variable de entorno PORT (ver application.properties).
+# - Todas las credenciales (DB_PASSWORD, AZURE_FUNCTION_KEY, CERT_PASSWORD, etc.)
+#   se inyectan como variables de entorno / secretos del servicio de Azure,
+#   nunca quedan horneadas en la imagen.
+####
+FROM eclipse-temurin:21-jre-alpine
+
+ENV LANGUAGE='en_US:en'
+
+RUN addgroup -S quarkus && adduser -S quarkus -G quarkus
+
+WORKDIR /deployments
+
+COPY --chown=quarkus:quarkus build/quarkus-app/lib/ /deployments/lib/
+COPY --chown=quarkus:quarkus build/quarkus-app/*.jar /deployments/
+COPY --chown=quarkus:quarkus build/quarkus-app/app/ /deployments/app/
+COPY --chown=quarkus:quarkus build/quarkus-app/quarkus/ /deployments/quarkus/
+
+USER quarkus
+
+EXPOSE 8080
+
+ENV JAVA_OPTS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
+ENV JAVA_APP_JAR="/deployments/quarkus-run.jar"
+
+ENTRYPOINT ["java", "-jar", "/deployments/quarkus-run.jar"]

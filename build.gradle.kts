@@ -19,6 +19,14 @@ dependencies {
     implementation("io.quarkus:quarkus-rest-jsonb")
     implementation("io.quarkus:quarkus-rest-client")
 
+    // Limpieza periódica de las cachés en memoria del orquestador (evita que crezcan sin límite)
+    implementation("io.quarkus:quarkus-scheduler")
+
+    // Health checks (/q/health/live, /q/health/ready) para orquestadores (Azure Container Apps, K8s)
+    implementation("io.quarkus:quarkus-smallrye-health")
+    // Resiliencia en llamadas salientes (timeout/retry) hacia el simulador de CA / Registro Civil
+    implementation("io.quarkus:quarkus-smallrye-fault-tolerance")
+
     // Extensión de Quarkus para Azure Key Vault
     implementation("io.quarkiverse.azureservices:quarkus-azure-keyvault:1.2.4")
 

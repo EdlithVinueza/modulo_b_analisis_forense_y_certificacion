@@ -11,6 +11,7 @@ import com.itextpdf.kernel.pdf.filespec.PdfFileSpec;
 import ec.edu.uce.certificadorforense.core.model.certificado.Certificado;
 import ec.edu.uce.certificadorforense.core.model.expediente.Expediente;
 import ec.edu.uce.certificadorforense.core.ports.out.GeneradorPDFPort;
+import jakarta.enterprise.context.ApplicationScoped;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.templatemode.TemplateMode;
@@ -25,6 +26,7 @@ import java.time.format.DateTimeFormatter;
  * Adaptador de infraestructura: generación del PDF visual del certificado Verisart.
  * Utiliza Thymeleaf para procesar una plantilla HTML y html2pdf para la conversión.
  */
+@ApplicationScoped
 public class GeneradorPDFAdapter implements GeneradorPDFPort {
 
     private final TemplateEngine templateEngine;

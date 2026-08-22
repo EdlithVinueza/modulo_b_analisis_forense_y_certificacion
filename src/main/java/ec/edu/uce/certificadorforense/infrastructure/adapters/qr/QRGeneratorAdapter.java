@@ -8,6 +8,7 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import ec.edu.uce.certificadorforense.core.ports.out.GeneradorQRPort;
+import jakarta.enterprise.context.ApplicationScoped;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -20,6 +21,7 @@ import java.util.Map;
  * Genera un PNG del QR con el contenido dado (Opción A: ID interno {@code CERT-NNNNNN}).
  * </p>
  */
+@ApplicationScoped
 public class QRGeneratorAdapter implements GeneradorQRPort {
 
     @Override

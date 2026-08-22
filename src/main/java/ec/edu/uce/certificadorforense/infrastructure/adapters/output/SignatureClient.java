@@ -9,6 +9,8 @@ import jakarta.ws.rs.core.MediaType;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.eclipse.microprofile.config.ConfigProvider;
+import org.eclipse.microprofile.faulttolerance.Retry;
+import org.eclipse.microprofile.faulttolerance.Timeout;
 
 @Path("/api")
 @RegisterRestClient(configKey = "signature-api")
@@ -20,9 +22,14 @@ public interface SignatureClient {
         return ConfigProvider.getConfig().getOptionalValue("azure.function.key", String.class).orElse("");
     }
 
+    // Sin esto, si el simulador de CA se cuelga, la firma de un expediente se
+    // queda esperando indefinidamente. Timeout + reintentos acotados evitan que
+    // un fallo transitorio del servicio externo bloquee la request para siempre.
     @POST
     @Path("/firmar_obra")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
+    @Timeout(15000)
+    @Retry(maxRetries = 2, delay = 500)
     JsonObject signWork(JsonObject json);
 }

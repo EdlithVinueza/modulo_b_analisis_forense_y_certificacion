@@ -19,11 +19,8 @@ public class Certificado {
     private String hashExpediente;
     private String hashExpedienteFirmado;
     private Instant fechaEmision;
-    private String emisor;
-    private String urlVerificacion;
     private String qrBase64;
     private String qrContenido;
-    private String firmaPDF;
 
     public String getHashExpedienteFirmado() {
         return hashExpedienteFirmado != null ? hashExpedienteFirmado : hashExpediente;

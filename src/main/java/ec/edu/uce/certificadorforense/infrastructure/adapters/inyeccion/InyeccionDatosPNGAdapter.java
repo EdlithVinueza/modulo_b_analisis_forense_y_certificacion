@@ -1,6 +1,8 @@
 package ec.edu.uce.certificadorforense.infrastructure.adapters.inyeccion;
 
 import ec.edu.uce.certificadorforense.core.ports.out.InyeccionDatosPort;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Named;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
@@ -23,6 +25,8 @@ import java.util.zip.CRC32;
  * [4 bytes longitud datos] [4 bytes "tEXt"] [keyword\0value] [4 bytes CRC32]
  * </pre>
  */
+@ApplicationScoped
+@Named("png")
 public class InyeccionDatosPNGAdapter implements InyeccionDatosPort {
 
     private static final byte[] PNG_SIGNATURE = {

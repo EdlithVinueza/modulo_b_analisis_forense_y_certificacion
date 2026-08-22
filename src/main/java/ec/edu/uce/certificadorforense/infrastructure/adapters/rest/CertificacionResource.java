@@ -135,8 +135,9 @@ public class CertificacionResource {
         try {
             String cedula = (String) body.get("cedula");
             
-            var usuario = ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.UsuarioEntity.find("cedula", cedula).firstResult();
-            
+            ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.UsuarioEntity usuario =
+                    ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.UsuarioEntity.find("cedula", cedula).firstResult();
+
             if (usuario == null) {
                 return Response.status(Response.Status.NOT_FOUND)
                        .entity("{\"error\": \"Ese número de cédula no se encuentra registrado en nuestro sistema.\"}")
@@ -152,8 +153,18 @@ public class CertificacionResource {
             }
             body.put("ip_registro", ipCliente);
 
-            orchestrator.registrarDatosFase2(idExpediente, (ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.UsuarioEntity) usuario, body);
-            
+            ec.edu.uce.certificadorforense.core.model.expediente.UsuarioDatos usuarioDatos =
+                    ec.edu.uce.certificadorforense.core.model.expediente.UsuarioDatos.builder()
+                            .id(usuario.id)
+                            .cedula(usuario.cedula)
+                            .nombres(usuario.nombres)
+                            .apellidos(usuario.apellidos)
+                            .correo(usuario.correo)
+                            .nombreArtistico(usuario.nombreArtistico)
+                            .build();
+
+            orchestrator.registrarDatosFase2(idExpediente, usuarioDatos, body);
+
             ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.UsuarioEntity.getEntityManager().flush();
             
             Map<String, String> response = new HashMap<>();

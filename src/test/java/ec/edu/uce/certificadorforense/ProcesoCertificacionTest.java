@@ -24,10 +24,8 @@ import ec.edu.uce.certificadorforense.core.rules.rulesimplement.imagen.*;
 import ec.edu.uce.certificadorforense.core.rules.rulesimplement.psd.*;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.inyeccion.InyeccionDatosPNGAdapter;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.inyeccion.InyeccionDatosJPEGAdapter;
-import ec.edu.uce.certificadorforense.infrastructure.adapters.firma.FirmadorP12Adapter;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.firma.FirmadorPDFAdapter;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.hash.SHA512Adapter;
-import ec.edu.uce.certificadorforense.infrastructure.adapters.json.ExpedienteJsonAdapter;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.pdf.GeneradorPDFAdapter;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.processors.*;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.qr.QRGeneratorAdapter;
@@ -92,24 +90,20 @@ public class ProcesoCertificacionTest {
         // ── 1. Construir adaptadores de infraestructura ──────────────────────
         GeneradorHashPort hashPort = new SHA512Adapter();
         GeneradorQRPort qrPort = new QRGeneratorAdapter();
-        FirmadorExpedientePort firmadorExp = new FirmadorP12Adapter();
         String rutaRootCa = "C:/Users/edlit/OneDrive/Documentos/TESIS/Archivos de Prueba/firma .p12/firma_9900000003.p12";
         FirmadorPDFPort firmadorPDF = new FirmadorPDFAdapter(rutaRootCa);
         GeneradorPDFPort generadorPDF = new GeneradorPDFAdapter();
-        
+
         InyeccionDatosPort inyector;
         if (extension.equalsIgnoreCase("jpg") || extension.equalsIgnoreCase("jpeg")) {
             inyector = new InyeccionDatosJPEGAdapter();
         } else {
             inyector = new InyeccionDatosPNGAdapter();
         }
-        
-        ExpedienteRepositoryPort repositorio = new ExpedienteJsonAdapter(DIRECTORIO_SALIDA + "/expedientes");
 
         // ── 2. Construir servicios de dominio ────────────────────────────────
         HashSHA512Service hashService = new HashSHA512Service(hashPort);
         ExpedienteService expedienteServ = new ExpedienteService();
-        FirmaAutorService firmaServ = new FirmaAutorService(firmadorExp);
         CertificadoService certServ = new CertificadoService(qrPort, hashPort);
 
         // ── 3. Construir procesadores de archivos ────────────────────────────
@@ -139,7 +133,6 @@ public class ProcesoCertificacionTest {
         publisher.suscribir(new HashGeneratorListener(hashPort, contexto));
         publisher.suscribir(new MetadataExtractorListener(contexto));
         publisher.suscribir(new CapasExtractorListener(contexto));
-        publisher.suscribir(new ExpedienteListener(repositorio));
         publisher.suscribir(new HistorialObserver());
         publisher.suscribir(new PDFGeneratorListener(contexto));
 
@@ -248,10 +241,24 @@ public class ProcesoCertificacionTest {
         String expedienteJson = gson.toJson(expediente);
         contexto.setExpedienteJson(expedienteJson);
 
-        assertDoesNotThrow(() -> firmaServ.validar(p12Autor, PASS_AUTOR), "La validación del p12 del artista falló");
+        // La firma real del autor se hace en la nube (FirmadorNubePort → simulador de CA),
+        // fuera del alcance de este test offline de pipeline. Fabricamos una firma de
+        // prueba (con el hash real del expediente) para poder seguir probando el resto
+        // del flujo — PDF, sellado, inyección de datos — sin credenciales ni red.
+        java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-512");
+        byte[] hashExpedienteBytes = md.digest(expedienteJson.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        StringBuilder hashHex = new StringBuilder();
+        for (byte b : hashExpedienteBytes) {
+            hashHex.append(String.format("%02x", b));
+        }
 
-        FirmaAutor firma = firmaServ.firmar(expedienteJson, p12Autor, PASS_AUTOR);
-        assertNotNull(firma, "No se pudo firmar el expediente");
+        FirmaAutor firma = FirmaAutor.builder()
+                .firmaBase64(Base64.getEncoder().encodeToString("firma-de-prueba-offline".getBytes()))
+                .hashExpediente(hashHex.toString())
+                .algoritmo("SHA512withRSA")
+                .fechaFirma(java.time.Instant.now())
+                .aliasKeystore("TEST")
+                .build();
         assertNotNull(firma.getFirmaBase64(), "La firma generada está vacía");
 
         contexto.setFirmaAutor(firma);
