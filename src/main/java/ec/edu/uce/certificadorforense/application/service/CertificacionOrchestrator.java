@@ -354,8 +354,6 @@ public class CertificacionOrchestrator {
             contexto.getEstadoActual().avanzar(contexto); // Avanza a FirmaAutorState
         }
 
-        String ipRegistro = (String) body.get("ip_registro");
-
         // PERSISTENCIA EN DB (Soporte para rectificación)
         Optional<ExpedienteResumen> expDbOpt = expedienteRepository.buscarResumenPorId(idExpediente);
 
@@ -392,12 +390,11 @@ public class CertificacionOrchestrator {
             }
 
             expedienteRepository.registrarNuevaObraYExpediente(idExpediente, usuarioDb.getId(), obra, cat, decl,
-                    ipRegistro, contexto.getSha512PSD(), contexto.getSha512Imagen(), contexto.getPHash(),
+                    contexto.getSha512PSD(), contexto.getSha512Imagen(), contexto.getPHash(),
                     jsonEv.toString());
         } else {
             // Rectificación: Actualizar obra existente
-            expedienteRepository.actualizarObraYDeclaraciones(idExpediente, usuarioDb.getId(), obra, cat, decl,
-                    ipRegistro);
+            expedienteRepository.actualizarObraYDeclaraciones(idExpediente, usuarioDb.getId(), obra, cat, decl);
         }
     }
 

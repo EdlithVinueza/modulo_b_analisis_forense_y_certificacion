@@ -36,11 +36,11 @@ public interface ExpedienteRepositoryPort {
     void eliminarBorrador(UUID obraId);
 
     void registrarNuevaObraYExpediente(String idExpediente, UUID usuarioId, Obra obra, CategoriaObra categoria,
-                                        Declaraciones declaraciones, String ipRegistro,
+                                        Declaraciones declaraciones,
                                         String hashPsd, String hashImagen, String phash, String evidenciaTecnicaJson);
 
     void actualizarObraYDeclaraciones(String idExpediente, UUID usuarioId, Obra obra, CategoriaObra categoria,
-                                       Declaraciones declaraciones, String ipRegistro);
+                                       Declaraciones declaraciones);
 
     // ── Fase 3 — firma del autor ───────────────────────────────────────
     void guardarFirma(String idExpediente, FirmaAutor firma);

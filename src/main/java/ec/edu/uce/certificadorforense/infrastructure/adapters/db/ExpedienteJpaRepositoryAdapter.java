@@ -96,7 +96,7 @@ public class ExpedienteJpaRepositoryAdapter implements ExpedienteRepositoryPort 
 
     @Override
     public void registrarNuevaObraYExpediente(String idExpediente, UUID usuarioId, Obra obra, CategoriaObra categoria,
-                                               Declaraciones declaraciones, String ipRegistro,
+                                               Declaraciones declaraciones,
                                                String hashPsd, String hashImagen, String phash, String evidenciaTecnicaJson) {
         UsuarioEntity usuario = UsuarioEntity.findById(usuarioId);
 
@@ -119,7 +119,6 @@ public class ExpedienteJpaRepositoryAdapter implements ExpedienteRepositoryPort 
         decDb.esTitularDerechos = declaraciones.isTitularDerechos();
         decDb.aceptaTerminosCertificacion = declaraciones.isAceptaTerminos();
         decDb.fechaAceptacion = LocalDateTime.now();
-        decDb.ipRegistro = ipRegistro;
         decDb.persist();
 
         ExpedienteForenseEntity expDb = new ExpedienteForenseEntity();
@@ -146,7 +145,7 @@ public class ExpedienteJpaRepositoryAdapter implements ExpedienteRepositoryPort 
 
     @Override
     public void actualizarObraYDeclaraciones(String idExpediente, UUID usuarioId, Obra obra, CategoriaObra categoria,
-                                              Declaraciones declaraciones, String ipRegistro) {
+                                              Declaraciones declaraciones) {
         ExpedienteForenseEntity expDb = ExpedienteForenseEntity.findById(UUID.fromString(idExpediente));
         UsuarioEntity usuario = UsuarioEntity.findById(usuarioId);
 
@@ -169,7 +168,6 @@ public class ExpedienteJpaRepositoryAdapter implements ExpedienteRepositoryPort 
         decDb.esTitularDerechos = declaraciones.isTitularDerechos();
         decDb.aceptaTerminosCertificacion = declaraciones.isAceptaTerminos();
         decDb.fechaAceptacion = LocalDateTime.now();
-        decDb.ipRegistro = ipRegistro;
         decDb.persist();
 
         HistorialEstadoEntity hist = new HistorialEstadoEntity();

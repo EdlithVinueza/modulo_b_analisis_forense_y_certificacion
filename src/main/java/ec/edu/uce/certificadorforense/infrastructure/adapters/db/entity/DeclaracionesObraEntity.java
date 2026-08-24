@@ -26,7 +26,4 @@ public class DeclaracionesObraEntity extends PanacheEntityBase {
 
     @Column(name = "fecha_aceptacion")
     public LocalDateTime fechaAceptacion;
-
-    @Column(name = "ip_registro", length = 45)
-    public String ipRegistro;
 }

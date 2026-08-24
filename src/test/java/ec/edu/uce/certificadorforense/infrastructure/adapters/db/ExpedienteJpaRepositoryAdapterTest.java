@@ -63,7 +63,7 @@ public class ExpedienteJpaRepositoryAdapterTest {
 
         // 1. Registro (Fase 2, camino nuevo)
         repo.registrarNuevaObraYExpediente(idExpediente, usuario.id, obra, CategoriaObra.ILUSTRACION, decl,
-                "127.0.0.1", hashPsd, hashImagen, phash, "{\"ancho\":100,\"alto\":100,\"extensionReal\":\"png\"}");
+                hashPsd, hashImagen, phash, "{\"ancho\":100,\"alto\":100,\"extensionReal\":\"png\"}");
 
         Optional<ExpedienteResumen> resumen = repo.buscarResumenPorId(idExpediente);
         assertTrue(resumen.isPresent(), "El expediente debe existir tras registrarNuevaObraYExpediente");
@@ -84,7 +84,7 @@ public class ExpedienteJpaRepositoryAdapterTest {
                 .categoria(CategoriaObra.ILUSTRACION)
                 .fechaCreacion(LocalDate.now())
                 .build();
-        repo.actualizarObraYDeclaraciones(idExpediente, usuario.id, obraActualizada, CategoriaObra.ILUSTRACION, decl, "127.0.0.1");
+        repo.actualizarObraYDeclaraciones(idExpediente, usuario.id, obraActualizada, CategoriaObra.ILUSTRACION, decl);
 
         // 3. Firma (Fase 3)
         FirmaAutor firma = FirmaAutor.builder()
@@ -132,7 +132,7 @@ public class ExpedienteJpaRepositoryAdapterTest {
         Declaraciones decl = Declaraciones.builder().titularDerechos(true).aceptaTerminos(true).build();
 
         repo.registrarNuevaObraYExpediente(idExpediente, usuario.id, obra, CategoriaObra.ILUSTRACION, decl,
-                "127.0.0.1", "hash-psd-borrador-" + idExpediente, "hash-img-borrador-" + idExpediente,
+                "hash-psd-borrador-" + idExpediente, "hash-img-borrador-" + idExpediente,
                 "phash-borrador-" + idExpediente, "{}");
         // En producción, eliminarBorrador siempre actúa sobre una fila ya persistida en una
         // transacción/request anterior — nunca sobre algo recién insertado en la misma transacción.
