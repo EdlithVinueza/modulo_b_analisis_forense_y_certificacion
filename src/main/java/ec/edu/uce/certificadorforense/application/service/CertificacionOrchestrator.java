@@ -75,7 +75,7 @@ public class CertificacionOrchestrator {
     @jakarta.inject.Named("png")
     InyeccionDatosPort inyeccionPng;
 
-    @org.eclipse.microprofile.config.inject.ConfigProperty(name = "tesis.cert.password")
+    @org.eclipse.microprofile.config.inject.ConfigProperty(name = "tesis.cert.password", defaultValue = "")
     String certPassword;
 
     // Tiempo que una certificación puede quedar a medias antes de considerarse abandonada
@@ -539,6 +539,18 @@ public class CertificacionOrchestrator {
         zos.close();
 
         return baosZip.toByteArray();
+    }
+
+    /**
+     * Verifica que el expediente pertenezca al usuario cuya cédula viene en el JWT
+     * de la petición — evita que un usuario autenticado actúe sobre el expediente
+     * de otra persona (ver CertificacionResource).
+     */
+    public boolean esPropietario(String idExpediente, String cedulaSolicitante) {
+        if (cedulaSolicitante == null) return false;
+        return expedienteRepository.buscarResumenPorId(idExpediente)
+                .map(exp -> cedulaSolicitante.equals(exp.getUsuarioCedula()))
+                .orElse(false);
     }
 
     public byte[] obtenerZipYLimpiar(String idExpediente) {

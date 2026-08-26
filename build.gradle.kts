@@ -30,6 +30,9 @@ dependencies {
     // Extensión de Quarkus para Azure Key Vault
     implementation("io.quarkiverse.azureservices:quarkus-azure-keyvault:1.2.4")
 
+    // Verificación de JWT emitido por Módulo A (autenticación de CertificacionResource)
+    implementation("io.quarkus:quarkus-smallrye-jwt")
+
     // Persistencia (ORM, BD y Migraciones)
     implementation("io.quarkus:quarkus-hibernate-orm")
     implementation("io.quarkus:quarkus-hibernate-orm-panache")

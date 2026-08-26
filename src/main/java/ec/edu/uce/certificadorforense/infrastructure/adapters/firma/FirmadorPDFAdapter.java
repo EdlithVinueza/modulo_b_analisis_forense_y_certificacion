@@ -13,18 +13,18 @@ import java.security.cert.X509Certificate;
 import java.util.Enumeration;
 
 /**
- * Adaptador de infraestructura: firma digital del PDF con el certificado institucional {@code root_ca.p12}.
+ * Adaptador de infraestructura: firma digital del PDF con el certificado
+ * institucional cargado desde Azure Key Vault (ver VaultSealAdapter).
  * <p>
  * Usa iText 7 {@code PdfSigner} con el proveedor criptográfico BouncyCastle.
- * La ruta del certificado CA es fija: {@code /home/edlith/Documentos/UCE 26-26/TESIS/CLAVES LINUX/sistema_certificado/sistema.p12}.
  * </p>
  */
 public class FirmadorPDFAdapter implements FirmadorPDFPort {
 
-    private final String rutaRootCa;
+    private final byte[] pkcs12Bytes;
 
-    public FirmadorPDFAdapter(String rutaRootCa) {
-        this.rutaRootCa = rutaRootCa;
+    public FirmadorPDFAdapter(byte[] pkcs12Bytes) {
+        this.pkcs12Bytes = pkcs12Bytes;
     }
 
     static {
@@ -37,15 +37,9 @@ public class FirmadorPDFAdapter implements FirmadorPDFPort {
     @Override
     public byte[] firmarPDF(byte[] pdfSinFirmar, String contrasenaCA) {
         try {
-            File archivoCa = new File(this.rutaRootCa);
-            if (!archivoCa.exists()) {
-                throw new FirmaPDFException("No se encontró root_ca.p12 en: " + archivoCa.getAbsolutePath());
-            }
-
-            // Cargar el keystore del CA institucional
             KeyStore ks = KeyStore.getInstance("PKCS12");
-            try (FileInputStream fis = new FileInputStream(archivoCa)) {
-                ks.load(fis, contrasenaCA.toCharArray());
+            try (ByteArrayInputStream bis = new ByteArrayInputStream(pkcs12Bytes)) {
+                ks.load(bis, contrasenaCA.toCharArray());
             }
 
             String alias = obtenerAlias(ks);
@@ -72,7 +66,7 @@ public class FirmadorPDFAdapter implements FirmadorPDFPort {
                         PdfSigner.CryptoStandard.CMS);
             }
 
-            System.out.println("[FirmadorPDFAdapter] PDF firmado con root_ca.p12. Alias: " + alias);
+            System.out.println("[FirmadorPDFAdapter] PDF firmado con el certificado institucional de Key Vault. Alias: " + alias);
             return baosFirmado.toByteArray();
 
         } catch (FirmaPDFException e) {
@@ -85,7 +79,7 @@ public class FirmadorPDFAdapter implements FirmadorPDFPort {
     private String obtenerAlias(KeyStore ks) throws KeyStoreException {
         Enumeration<String> aliases = ks.aliases();
         if (!aliases.hasMoreElements()) {
-            throw new FirmaPDFException("El root_ca.p12 no contiene ningún alias.");
+            throw new FirmaPDFException("El certificado institucional no contiene ningún alias.");
         }
         return aliases.nextElement();
     }

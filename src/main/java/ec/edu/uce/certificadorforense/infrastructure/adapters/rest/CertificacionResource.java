@@ -1,11 +1,13 @@
 package ec.edu.uce.certificadorforense.infrastructure.adapters.rest;
 
 import ec.edu.uce.certificadorforense.application.service.CertificacionOrchestrator;
+import io.quarkus.security.Authenticated;
 import io.smallrye.common.annotation.Blocking;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 
@@ -19,10 +21,13 @@ import java.util.Map;
  * Controlador REST que actúa como punto de entrada de la UI en Vue.
  * Delegando al Orquestador (Arquitectura Hexagonal).
  * Todos los endpoints llevan @Blocking para evitar bloquear el Event Loop de Vert.x en RESTEasy Reactive.
+ * Requiere JWT (emitido por Módulo A); los métodos que operan sobre un
+ * expediente/cédula puntual además verifican que sea el dueño quien llama.
  */
 @Path("/api/v1/certificaciones")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Authenticated
 public class CertificacionResource {
 
     @Inject
@@ -30,6 +35,15 @@ public class CertificacionResource {
 
     @Inject
     ec.edu.uce.certificadorforense.application.service.RecuperacionCertificadoService recuperacionService;
+
+    @Inject
+    JsonWebToken jwt;
+
+    private Response forbidden(String message) {
+        Map<String, String> errorPayload = new HashMap<>();
+        errorPayload.put("error", message);
+        return Response.status(Response.Status.FORBIDDEN).entity(errorPayload).build();
+    }
 
     @POST
     @Path("/init")
@@ -90,6 +104,13 @@ public class CertificacionResource {
                         .build();
             }
 
+            if (!cedula.equals(jwt.getClaim("cedula"))) {
+                return Response.status(Response.Status.FORBIDDEN)
+                        .type(MediaType.TEXT_PLAIN)
+                        .entity("No puedes recuperar el certificado de otro usuario.")
+                        .build();
+            }
+
             tempImg = Files.createTempFile("forense-rec-", "-" + imagenFile.fileName());
             Files.copy(imagenFile.uploadedFile(), tempImg, StandardCopyOption.REPLACE_EXISTING);
             File img = tempImg.toFile();
@@ -130,7 +151,11 @@ public class CertificacionResource {
     public Response enviarDatosObra(@PathParam("id") String idExpediente, Map<String, Object> body) {
         try {
             String cedula = (String) body.get("cedula");
-            
+
+            if (!java.util.Objects.equals(cedula, jwt.getClaim("cedula"))) {
+                return forbidden("No puedes registrar datos de obra a nombre de otro usuario.");
+            }
+
             ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.UsuarioEntity usuario =
                     ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.UsuarioEntity.find("cedula", cedula).firstResult();
 
@@ -181,6 +206,10 @@ public class CertificacionResource {
                 return errorResponse("Falta la contraseña.");
             }
 
+            if (!orchestrator.esPropietario(idExpediente, jwt.getClaim("cedula"))) {
+                return forbidden("No puedes firmar el expediente de otro usuario.");
+            }
+
             String hashCert = orchestrator.firmarFase3(idExpediente, password);
 
             Map<String, String> response = new HashMap<>();
@@ -199,6 +228,10 @@ public class CertificacionResource {
     @Blocking
     public Response descargarCertificado(@PathParam("id") String idExpediente) {
         try {
+            if (!orchestrator.esPropietario(idExpediente, jwt.getClaim("cedula"))) {
+                return forbidden("No puedes descargar el certificado de otro usuario.");
+            }
+
             byte[] zipBytes = orchestrator.obtenerZipYLimpiar(idExpediente);
 
             if (zipBytes == null || zipBytes.length == 0) {
