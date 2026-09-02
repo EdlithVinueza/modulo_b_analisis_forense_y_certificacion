@@ -39,6 +39,9 @@ public class CertificacionResource {
     @Inject
     JsonWebToken jwt;
 
+    @Inject
+    ec.edu.uce.certificadorforense.infrastructure.adapters.security.BlindIndexService blindIndexService;
+
     private Response forbidden(String message) {
         Map<String, String> errorPayload = new HashMap<>();
         errorPayload.put("error", message);
@@ -157,7 +160,8 @@ public class CertificacionResource {
             }
 
             ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.UsuarioEntity usuario =
-                    ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.UsuarioEntity.find("cedula", cedula).firstResult();
+                    ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.UsuarioEntity
+                            .find("cedulaHash", blindIndexService.hash(cedula)).firstResult();
 
             if (usuario == null) {
                 return Response.status(Response.Status.NOT_FOUND)

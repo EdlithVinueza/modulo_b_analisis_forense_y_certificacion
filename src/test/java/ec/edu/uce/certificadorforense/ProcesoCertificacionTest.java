@@ -91,7 +91,9 @@ public class ProcesoCertificacionTest {
         GeneradorHashPort hashPort = new SHA512Adapter();
         GeneradorQRPort qrPort = new QRGeneratorAdapter();
         String rutaRootCa = "C:/Users/edlit/OneDrive/Documentos/TESIS/Archivos de Prueba/firma .p12/firma_9900000003.p12";
-        FirmadorPDFPort firmadorPDF = new FirmadorPDFAdapter(rutaRootCa);
+        File archivoRootCa = new File(rutaRootCa);
+        Assumptions.assumeTrue(archivoRootCa.exists(), "Falta archivo p12 de la CA raíz en: " + rutaRootCa);
+        FirmadorPDFPort firmadorPDF = new FirmadorPDFAdapter(Files.readAllBytes(archivoRootCa.toPath()));
         GeneradorPDFPort generadorPDF = new GeneradorPDFAdapter();
 
         InyeccionDatosPort inyector;

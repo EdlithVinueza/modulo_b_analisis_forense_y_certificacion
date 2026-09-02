@@ -75,8 +75,11 @@ public class CertificacionOrchestrator {
     @jakarta.inject.Named("png")
     InyeccionDatosPort inyeccionPng;
 
-    @org.eclipse.microprofile.config.inject.ConfigProperty(name = "tesis.cert.password", defaultValue = "")
-    String certPassword;
+    // Optional<String>, no String: MicroProfile Config trata un valor "" (contraseña vacía,
+    // el caso real de un certificado generado por Key Vault) como ausente y falla la
+    // validación de arranque si el tipo es String no-opcional.
+    @org.eclipse.microprofile.config.inject.ConfigProperty(name = "tesis.cert.password")
+    java.util.Optional<String> certPassword;
 
     // Tiempo que una certificación puede quedar a medias antes de considerarse abandonada
     // (usuario cerró el navegador en medio del wizard) y liberar su memoria.
@@ -310,11 +313,12 @@ public class CertificacionOrchestrator {
 
         String nombresDec = usuarioDb.getNombres() != null ? vaultEncryptionService.decrypt(usuarioDb.getNombres()) : "";
         String apellidosDec = usuarioDb.getApellidos() != null ? vaultEncryptionService.decrypt(usuarioDb.getApellidos()) : "";
+        String cedulaDec = usuarioDb.getCedula() != null ? vaultEncryptionService.decrypt(usuarioDb.getCedula()) : "";
 
         Autor autor = Autor.builder()
                 .nombres(nombresDec)
                 .apellidos(apellidosDec)
-                .cedula(usuarioDb.getCedula())
+                .cedula(cedulaDec)
                 .correo(usuarioDb.getCorreo())
                 .seudonimo(usuarioDb.getNombreArtistico() != null ? usuarioDb.getNombreArtistico() : "")
                 .build();
@@ -452,12 +456,10 @@ public class CertificacionOrchestrator {
             String responseBody = we.getResponse().readEntity(String.class);
             throw new RuntimeException("Respuesta de la CA: " + responseBody);
         } catch (Exception e) {
-            // Imprimir el error REAL en la consola de Quarkus para depurar si es fallo de
-            // Azure, de payload o timeout
+            // Detalle técnico solo en el log del servidor — al usuario nunca le debe
+            // llegar un mensaje interno (excepción de CDI, stacktrace, etc.).
             e.printStackTrace();
-            // Retornamos el error original para que lo puedas ver en la pantalla de Vue!
-            String errorReal = e.getMessage() != null ? e.getMessage() : e.toString();
-            throw new RuntimeException("Fallo de conexión con Azure: " + errorReal);
+            throw new RuntimeException("No se pudo completar la firma digital en este momento. Intenta nuevamente en unos minutos.");
         }
 
         FirmaAutor firma = FirmaAutor.builder()
@@ -501,11 +503,9 @@ public class CertificacionOrchestrator {
         byte[] pdfSinFirmar = generadorPDF.generar(certificado, contexto.getExpediente(), expedienteFirmadoJson,
                 imagenBase64);
 
-        byte[] pdfFirmado = pdfSinFirmar;
-        try {
-            pdfFirmado = selladorInstitucional.sellar(pdfSinFirmar, certPassword);
-        } catch (Exception ignored) {
-        }
+        // Un certificado sin el sello institucional no es válido — si falla,
+        // toda la emisión debe fallar (no degradar a un PDF sin sellar).
+        byte[] pdfFirmado = selladorInstitucional.sellar(pdfSinFirmar, certPassword.orElse(""));
         contexto.setPdfCertificado(pdfFirmado);
 
         // Inyección de Datos de Certificación en la Imagen

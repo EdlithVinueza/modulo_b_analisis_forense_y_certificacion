@@ -21,6 +21,9 @@ public class UsuarioEntity extends PanacheEntityBase {
     @Column(unique = true, nullable = false, columnDefinition = "TEXT")
     public String cedula;
 
+    @Column(name = "cedula_hash", unique = true, columnDefinition = "TEXT")
+    public String cedulaHash;
+
     @Column(nullable = false, columnDefinition = "TEXT")
     public String nombres;
 

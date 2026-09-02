@@ -10,7 +10,9 @@ import ec.edu.uce.certificadorforense.core.model.obra.Obra;
 import ec.edu.uce.certificadorforense.core.ports.out.ExpedienteRepositoryPort;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.*;
 
+import ec.edu.uce.certificadorforense.infrastructure.adapters.security.VaultEncryptionService;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 
 import java.time.LocalDateTime;
@@ -27,6 +29,9 @@ import java.util.UUID;
  */
 @ApplicationScoped
 public class ExpedienteJpaRepositoryAdapter implements ExpedienteRepositoryPort {
+
+    @Inject
+    VaultEncryptionService vaultEncryptionService;
 
     @Override
     public Optional<ExpedienteResumen> buscarPorHashImagen(String hashImagen) {
@@ -64,7 +69,7 @@ public class ExpedienteJpaRepositoryAdapter implements ExpedienteRepositoryPort 
                 .phashImagenString(exp.phashImagenString)
                 .evidenciaTecnicaJson(exp.evidenciaTecnicaJson)
                 .usuarioId(usuario != null ? usuario.id : null)
-                .usuarioCedula(usuario != null ? usuario.cedula : null)
+                .usuarioCedula(usuario != null ? vaultEncryptionService.decrypt(usuario.cedula) : null)
                 .usuarioFirmaP12(usuario != null ? usuario.firmaP12 : null)
                 .build();
     }
@@ -265,7 +270,7 @@ public class ExpedienteJpaRepositoryAdapter implements ExpedienteRepositoryPort 
                 .build();
 
         return Optional.of(RecuperacionDatos.builder()
-                .usuarioCedula(expDb.obra.usuario.cedula)
+                .usuarioCedula(vaultEncryptionService.decrypt(expDb.obra.usuario.cedula))
                 .certificado(certificado)
                 .expedienteFirmadoRaw(certDb.expedienteFirmadoRaw)
                 .build());

@@ -30,6 +30,13 @@ dependencies {
     // Extensión de Quarkus para Azure Key Vault
     implementation("io.quarkiverse.azureservices:quarkus-azure-keyvault:1.2.4")
 
+    // SDK crudo de Azure Key Vault (KeyClient/CryptographyClient) — mismo que usa
+    // Módulo A para envolver/desenvolver la llave AES de nombres/apellidos/cédula
+    // con la llave RSA "master-custody-key". La extensión de arriba solo trae
+    // secretos, no operaciones de cifrado con una llave.
+    implementation("com.azure:azure-security-keyvault-keys:4.10.6")
+    implementation("com.azure:azure-identity:1.13.0")
+
     // Verificación de JWT emitido por Módulo A (autenticación de CertificacionResource)
     implementation("io.quarkus:quarkus-smallrye-jwt")
 

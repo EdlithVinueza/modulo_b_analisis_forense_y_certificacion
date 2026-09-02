@@ -67,13 +67,11 @@ public class GeneradorPDFAdapter implements GeneradorPDFPort {
         ctx.setVariable("fechaEmision", fechaStr);
         ctx.setVariable("versionMetadatos", "1.1");
         
-        String nombresRaw = expediente != null && expediente.getAutor() != null ? expediente.getAutor().getNombres() : "";
-        String apellidosRaw = expediente != null && expediente.getAutor() != null ? expediente.getAutor().getApellidos() : "";
-        
-        ec.edu.uce.certificadorforense.infrastructure.adapters.security.VaultEncryptionService vaultService = 
-                new ec.edu.uce.certificadorforense.infrastructure.adapters.security.VaultEncryptionService();
-        String nombres = vaultService.decrypt(nombresRaw);
-        String apellidos = vaultService.decrypt(apellidosRaw);
+        // El Autor ya llega con nombres/apellidos desencriptados (ver
+        // CertificacionOrchestrator.registrarDatosFase2) — no hay que
+        // volver a desencriptarlos aquí.
+        String nombres = expediente != null && expediente.getAutor() != null ? expediente.getAutor().getNombres() : "";
+        String apellidos = expediente != null && expediente.getAutor() != null ? expediente.getAutor().getApellidos() : "";
         String autorNombreCompleto = (nombres + " " + apellidos).trim();
         if (autorNombreCompleto.isEmpty() && expediente != null && expediente.getAutor() != null) {
             autorNombreCompleto = expediente.getAutor().getNombreCompleto();
