@@ -21,13 +21,23 @@ import java.util.UUID;
  */
 public interface ExpedienteRepositoryPort {
 
-    // ── Fase 1 — detección de duplicados ──────────────────────────────
+    // ── Fase 1 — detección de duplicados y creación de borrador ────────
     Optional<ExpedienteResumen> buscarPorHashImagen(String hashImagen);
 
     Optional<ExpedienteResumen> buscarPorHashPsd(String hashPsd);
 
     /** Candidatos para comparación por similitud visual (pHash). */
     List<ExpedienteResumen> listarCertificadosConPHash();
+
+    /** Persiste el análisis forense aprobado como borrador con estado ANALIZADO. */
+    void crearBorradorAnalisis(String idExpediente, UUID usuarioId, String hashPsd, String hashImagen,
+                                String phash, String evidenciaTecnicaJson, byte[] imagenRaw);
+
+    /** Obtiene los bytes de la imagen original almacenados temporalmente. */
+    byte[] obtenerImagenRaw(String idExpediente);
+
+    /** Libera los bytes de la imagen temporal una vez emitido el certificado. */
+    void limpiarImagenRaw(String idExpediente);
 
     // ── Fase 2 — registro / rectificación de datos de la obra ─────────
     Optional<ExpedienteResumen> buscarResumenPorId(String idExpediente);
@@ -45,8 +55,16 @@ public interface ExpedienteRepositoryPort {
     // ── Fase 3 — firma del autor ───────────────────────────────────────
     void guardarFirma(String idExpediente, FirmaAutor firma);
 
+    void guardarFirma(String idExpediente, FirmaAutor firma, String expedienteJson);
+
+    Optional<FirmaAutor> buscarFirmaPorExpedienteId(String idExpediente);
+
     // ── Fase 4 — emisión del certificado ───────────────────────────────
     void guardarCertificado(String idExpediente, Certificado certificado, String expedienteFirmadoJson);
+
+    void guardarCertificado(String idExpediente, Certificado certificado, String expedienteFirmadoJson, byte[] paqueteZip);
+
+    byte[] obtenerZipCertificado(String idExpediente);
 
     // ── Recuperación de un certificado ya emitido ──────────────────────
     Optional<RecuperacionDatos> buscarParaRecuperacion(String hashImagenODePsd);

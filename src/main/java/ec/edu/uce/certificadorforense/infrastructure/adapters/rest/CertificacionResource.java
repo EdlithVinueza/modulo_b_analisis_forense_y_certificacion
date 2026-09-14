@@ -1,6 +1,11 @@
 package ec.edu.uce.certificadorforense.infrastructure.adapters.rest;
 
-import ec.edu.uce.certificadorforense.application.service.CertificacionOrchestrator;
+import ec.edu.uce.certificadorforense.application.service.RecuperacionCertificadoService;
+import ec.edu.uce.certificadorforense.core.ports.in.EmitirCertificadoUseCase;
+import ec.edu.uce.certificadorforense.core.ports.in.FirmarExpedienteUseCase;
+import ec.edu.uce.certificadorforense.core.ports.in.IniciarAnalisisUseCase;
+import ec.edu.uce.certificadorforense.core.ports.in.RegistrarDatosObraUseCase;
+import ec.edu.uce.certificadorforense.infrastructure.adapters.rest.util.TempFileUtil;
 import io.quarkus.security.Authenticated;
 import io.smallrye.common.annotation.Blocking;
 import jakarta.inject.Inject;
@@ -12,17 +17,12 @@ import org.jboss.resteasy.reactive.RestForm;
 import org.jboss.resteasy.reactive.multipart.FileUpload;
 
 import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Controlador REST que actúa como punto de entrada de la UI en Vue.
- * Delegando al Orquestador (Arquitectura Hexagonal).
- * Todos los endpoints llevan @Blocking para evitar bloquear el Event Loop de Vert.x en RESTEasy Reactive.
- * Requiere JWT (emitido por Módulo A); los métodos que operan sobre un
- * expediente/cédula puntual además verifican que sea el dueño quien llama.
+ * Delegando directamente a los Casos de Uso (Puertos de Entrada de Arquitectura Hexagonal).
  */
 @Path("/api/v1/certificaciones")
 @Produces(MediaType.APPLICATION_JSON)
@@ -31,10 +31,19 @@ import java.util.Map;
 public class CertificacionResource {
 
     @Inject
-    CertificacionOrchestrator orchestrator;
+    IniciarAnalisisUseCase iniciarAnalisisUseCase;
 
     @Inject
-    ec.edu.uce.certificadorforense.application.service.RecuperacionCertificadoService recuperacionService;
+    RegistrarDatosObraUseCase registrarDatosObraUseCase;
+
+    @Inject
+    FirmarExpedienteUseCase firmarExpedienteUseCase;
+
+    @Inject
+    EmitirCertificadoUseCase emitirCertificadoUseCase;
+
+    @Inject
+    RecuperacionCertificadoService recuperacionService;
 
     @Inject
     JsonWebToken jwt;
@@ -54,39 +63,43 @@ public class CertificacionResource {
     @Blocking
     public Response iniciarCertificacion(@RestForm("psd") FileUpload psdFile,
                                          @RestForm("imagen") FileUpload imagenFile) {
-        java.nio.file.Path tempPsd = null;
-        java.nio.file.Path tempImg = null;
+        File psd = null;
+        File img = null;
         try {
             if (psdFile == null || imagenFile == null) {
                 return errorResponse("Faltan archivos para iniciar el análisis.");
             }
 
-            // RESTEasy genera archivos sin extensión. Para que la regla pase, se agrega sufijo.
-            tempPsd = Files.createTempFile("forense-", "-" + psdFile.fileName());
-            Files.copy(psdFile.uploadedFile(), tempPsd, StandardCopyOption.REPLACE_EXISTING);
-            
-            tempImg = Files.createTempFile("forense-", "-" + imagenFile.fileName());
-            Files.copy(imagenFile.uploadedFile(), tempImg, StandardCopyOption.REPLACE_EXISTING);
-            
-            File psd = tempPsd.toFile();
-            File img = tempImg.toFile();
-            
+            psd = TempFileUtil.crearTemporal(psdFile, "forense-psd");
+            img = TempFileUtil.crearTemporal(imagenFile, "forense-img");
+
             String ext = "png";
-            if(imagenFile.fileName().toLowerCase().endsWith(".jpg") || imagenFile.fileName().toLowerCase().endsWith(".jpeg")) {
+            if (imagenFile.fileName().toLowerCase().endsWith(".jpg") || imagenFile.fileName().toLowerCase().endsWith(".jpeg")) {
                 ext = "jpg";
             }
 
-            Map<String, String> result = orchestrator.iniciarAnalisisFase1(psd, img, ext);
+            java.util.UUID usuarioId = null;
+            String cedula = jwt.getClaim("cedula");
+            if (cedula != null) {
+                ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.UsuarioEntity usuario =
+                        ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.UsuarioEntity
+                                .find("cedulaHash", blindIndexService.hash(cedula)).firstResult();
+                if (usuario != null) {
+                    usuarioId = usuario.id;
+                }
+            }
+
+            Map<String, String> result = iniciarAnalisisUseCase.ejecutar(psd, img, ext, usuarioId);
 
             Map<String, String> response = new HashMap<>(result);
             response.putIfAbsent("estado", "ANALIZADO");
-            
+
             return Response.ok(response).build();
         } catch (Exception e) {
             return errorResponse(e.getMessage());
         } finally {
-            if (tempPsd != null) { try { Files.deleteIfExists(tempPsd); } catch (Exception ignored) {} }
-            if (tempImg != null) { try { Files.deleteIfExists(tempImg); } catch (Exception ignored) {} }
+            TempFileUtil.borrarSilencioso(psd);
+            TempFileUtil.borrarSilencioso(img);
         }
     }
 
@@ -98,7 +111,7 @@ public class CertificacionResource {
     public Response recuperarCertificado(@RestForm("imagen") FileUpload imagenFile,
                                          @RestForm("hash_duplicado") String hashDuplicado,
                                          @RestForm("cedula") String cedula) {
-        java.nio.file.Path tempImg = null;
+        File img = null;
         try {
             if (imagenFile == null || hashDuplicado == null || cedula == null) {
                 return Response.status(Response.Status.BAD_REQUEST)
@@ -114,12 +127,10 @@ public class CertificacionResource {
                         .build();
             }
 
-            tempImg = Files.createTempFile("forense-rec-", "-" + imagenFile.fileName());
-            Files.copy(imagenFile.uploadedFile(), tempImg, StandardCopyOption.REPLACE_EXISTING);
-            File img = tempImg.toFile();
+            img = TempFileUtil.crearTemporal(imagenFile, "forense-rec");
 
             String ext = "png";
-            if(imagenFile.fileName().toLowerCase().endsWith(".jpg") || imagenFile.fileName().toLowerCase().endsWith(".jpeg")) {
+            if (imagenFile.fileName().toLowerCase().endsWith(".jpg") || imagenFile.fileName().toLowerCase().endsWith(".jpeg")) {
                 ext = "jpg";
             }
 
@@ -143,7 +154,7 @@ public class CertificacionResource {
                     .entity("Error en la recuperación: " + e.getMessage())
                     .build();
         } finally {
-            if (tempImg != null) { try { Files.deleteIfExists(tempImg); } catch (Exception ignored) {} }
+            TempFileUtil.borrarSilencioso(img);
         }
     }
 
@@ -165,8 +176,8 @@ public class CertificacionResource {
 
             if (usuario == null) {
                 return Response.status(Response.Status.NOT_FOUND)
-                       .entity("{\"error\": \"Ese número de cédula no se encuentra registrado en nuestro sistema.\"}")
-                       .build();
+                        .entity("{\"error\": \"Ese número de cédula no se encuentra registrado en nuestro sistema.\"}")
+                        .build();
             }
 
             ec.edu.uce.certificadorforense.core.model.expediente.UsuarioDatos usuarioDatos =
@@ -179,19 +190,19 @@ public class CertificacionResource {
                             .nombreArtistico(usuario.nombreArtistico)
                             .build();
 
-            orchestrator.registrarDatosFase2(idExpediente, usuarioDatos, body);
+            registrarDatosObraUseCase.ejecutar(idExpediente, usuarioDatos, body);
 
             ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.UsuarioEntity.getEntityManager().flush();
-            
+
             Map<String, String> response = new HashMap<>();
             response.put("mensaje", "Datos guardados y vinculados correctamente en la base de datos.");
             response.put("estado", "ESPERANDO_FIRMA");
-            
+
             return Response.ok(response).build();
         } catch (Exception e) {
             String msg = e.getMessage() != null ? e.getMessage() : e.toString();
             Throwable cause = e.getCause();
-            while(cause != null) {
+            while (cause != null) {
                 msg += " | Causa: " + (cause.getMessage() != null ? cause.getMessage() : cause.toString());
                 cause = cause.getCause();
             }
@@ -210,16 +221,16 @@ public class CertificacionResource {
                 return errorResponse("Falta la contraseña.");
             }
 
-            if (!orchestrator.esPropietario(idExpediente, jwt.getClaim("cedula"))) {
+            if (!emitirCertificadoUseCase.esPropietario(idExpediente, jwt.getClaim("cedula"))) {
                 return forbidden("No puedes firmar el expediente de otro usuario.");
             }
 
-            String hashCert = orchestrator.firmarFase3(idExpediente, password);
+            String hashCert = firmarExpedienteUseCase.ejecutar(idExpediente, password);
 
             Map<String, String> response = new HashMap<>();
             response.put("hash_certificado", hashCert);
             response.put("estado", "CERTIFICADO");
-            
+
             return Response.ok(response).build();
         } catch (Exception e) {
             return errorResponse(e.getMessage());
@@ -232,11 +243,11 @@ public class CertificacionResource {
     @Blocking
     public Response descargarCertificado(@PathParam("id") String idExpediente) {
         try {
-            if (!orchestrator.esPropietario(idExpediente, jwt.getClaim("cedula"))) {
+            if (!emitirCertificadoUseCase.esPropietario(idExpediente, jwt.getClaim("cedula"))) {
                 return forbidden("No puedes descargar el certificado de otro usuario.");
             }
 
-            byte[] zipBytes = orchestrator.obtenerZipYLimpiar(idExpediente);
+            byte[] zipBytes = emitirCertificadoUseCase.obtenerZipYLimpiar(idExpediente);
 
             if (zipBytes == null || zipBytes.length == 0) {
                 return Response.status(Response.Status.NOT_FOUND)

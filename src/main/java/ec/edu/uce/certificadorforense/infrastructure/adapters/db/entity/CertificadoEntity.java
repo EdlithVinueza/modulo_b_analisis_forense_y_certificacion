@@ -33,4 +33,7 @@ public class CertificadoEntity extends PanacheEntityBase {
 
     @Column(name = "fecha_emision", nullable = false)
     public LocalDateTime fechaEmision;
+
+    @Column(name = "paquete_zip")
+    public byte[] paqueteZip;
 }

@@ -31,4 +31,7 @@ public class FirmaAutorEntity extends PanacheEntityBase {
 
     @Column(name = "fecha_firma", nullable = false)
     public LocalDateTime fechaFirma;
+
+    @Column(name = "expediente_json", columnDefinition = "TEXT")
+    public String expedienteJson;
 }

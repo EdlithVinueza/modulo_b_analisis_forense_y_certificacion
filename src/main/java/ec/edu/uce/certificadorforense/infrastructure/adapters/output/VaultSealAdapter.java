@@ -35,6 +35,11 @@ public class VaultSealAdapter implements SelladorInstitucionalPort {
 
     @Override
     public byte[] sellar(byte[] pdfBytes, String password) {
+        String actualCertName = (certName != null && !certName.isBlank() && !certName.contains("_"))
+                ? certName
+                : "system-certificadora-obras";
+        LOG.infof("[VaultSealAdapter] Obteniendo certificado institucional '%s' desde Azure Key Vault: %s",
+                actualCertName, vaultUrl);
         try {
             var credential = resolveCredential();
             SecretClient secretClient = new SecretClientBuilder()
@@ -42,7 +47,7 @@ public class VaultSealAdapter implements SelladorInstitucionalPort {
                     .credential(credential)
                     .buildClient();
 
-            String secretValue = secretClient.getSecret(certName).getValue();
+            String secretValue = secretClient.getSecret(actualCertName).getValue();
             byte[] pkcs12Bytes = Base64.getDecoder().decode(secretValue);
 
             FirmadorPDFAdapter firmador = new FirmadorPDFAdapter(pkcs12Bytes);

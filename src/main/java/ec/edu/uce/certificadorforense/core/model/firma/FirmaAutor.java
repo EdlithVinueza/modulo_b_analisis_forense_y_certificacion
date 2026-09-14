@@ -22,4 +22,5 @@ public class FirmaAutor {
     private String certificadoBase64;
     private String algoritmo;
     private String aliasKeystore;
+    private String expedienteJson;
 }

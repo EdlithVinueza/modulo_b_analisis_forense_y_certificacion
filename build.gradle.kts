@@ -96,6 +96,7 @@ application {
 tasks.test {
     enabled = true
     useJUnitPlatform()
+    maxHeapSize = "2048m"
     testLogging {
         events("passed", "skipped", "failed")
         showStandardStreams = true   // muestra System.out.println de los tests

@@ -12,9 +12,6 @@ import ec.edu.uce.certificadorforense.core.model.firma.FirmaAutor;
 import ec.edu.uce.certificadorforense.core.model.modelimplement.imagen.ArchivoImagen;
 import ec.edu.uce.certificadorforense.core.model.modelimplement.psd.ArchivoPSD;
 import ec.edu.uce.certificadorforense.core.model.validacion.VeredictoFinal;
-import ec.edu.uce.certificadorforense.core.observer.observerinterface.EventPublisher;
-import ec.edu.uce.certificadorforense.core.observer.eventos.*;
-import ec.edu.uce.certificadorforense.core.observer.observerimplement.*;
 import ec.edu.uce.certificadorforense.core.ports.out.*;
 import ec.edu.uce.certificadorforense.core.service.*;
 import ec.edu.uce.certificadorforense.core.state.stateinterface.*;
@@ -104,7 +101,6 @@ public class ProcesoCertificacionTest {
         }
 
         // ── 2. Construir servicios de dominio ────────────────────────────────
-        HashSHA512Service hashService = new HashSHA512Service(hashPort);
         ExpedienteService expedienteServ = new ExpedienteService();
         CertificadoService certServ = new CertificadoService(qrPort, hashPort);
 
@@ -127,16 +123,9 @@ public class ProcesoCertificacionTest {
 
         CalculadorPHash calcPHash = new CalculadorPHash();
 
-        // ── 4. Inicializar contexto y EventPublisher ─────────────────────────
+        // ── 4. Inicializar contexto ──────────────────────────────────────────
         AnalisisForenseState estadoInicial = new AnalisisForenseState();
         ContextoProceso contexto = new ContextoProceso(estadoInicial);
-
-        EventPublisher publisher = new EventPublisherImpl();
-        publisher.suscribir(new HashGeneratorListener(hashPort, contexto));
-        publisher.suscribir(new MetadataExtractorListener(contexto));
-        publisher.suscribir(new CapasExtractorListener(contexto));
-        publisher.suscribir(new HistorialObserver());
-        publisher.suscribir(new PDFGeneratorListener(contexto));
 
         // ══════════════════════════════════════════════════════════════════════
         // FASE 1 — Análisis Forense
@@ -154,9 +143,10 @@ public class ProcesoCertificacionTest {
 
         contexto.setArchivoPSD(psd);
         contexto.setArchivoImagen(imagen);
-
-        // Publicar evento
-        publisher.publicar(new EventoAnalisisIniciado(psd, imagen));
+        contexto.setSha512PSD(hashPort.calcularSHA512(archivoPSD));
+        contexto.setSha512Imagen(hashPort.calcularSHA512(archivoImagen));
+        contexto.setCapasPSD(psd.getCapas() != null ? psd.getCapas().size() : 0);
+        contexto.setMetadatosDetectados(psd.getMetadatos() != null);
 
         // Validar reglas forenses
         VeredictoFinal veredictoPSD = validadorPSD.validar(psd);
@@ -183,10 +173,6 @@ public class ProcesoCertificacionTest {
 
         // Avanzar estado
         contexto.getEstadoActual().avanzar(contexto);
-
-        publisher.publicar(new EventoAnalisisCompletado(
-                contexto.getSha512PSD(), contexto.getSha512Imagen(),
-                contexto.getPHash(), contexto.getCapasPSD()));
 
         // ══════════════════════════════════════════════════════════════════════
         // FASE 2 — Datos de la Obra
@@ -264,8 +250,6 @@ public class ProcesoCertificacionTest {
         assertNotNull(firma.getFirmaBase64(), "La firma generada está vacía");
 
         contexto.setFirmaAutor(firma);
-
-        publisher.publicar(new EventoFirmaRealizada(expediente, expedienteJson, firma));
         contexto.getEstadoActual().avanzar(contexto);
 
         // ══════════════════════════════════════════════════════════════════════
@@ -324,8 +308,6 @@ public class ProcesoCertificacionTest {
         String nombreImagenCertificada = certificado.getIdCertificado() + "-obra-certificada." + extension;
         Files.write(dirSalida.resolve(nombreImagenCertificada), imagenCert);
         System.out.println("   Imagen certificada guardada: " + dirSalida.resolve(nombreImagenCertificada).toAbsolutePath());
-
-        publisher.publicar(new EventoCertificadoEmitido(certificado));
 
         System.out.println("\n╔══════════════════════════════════════════════════════╗");
         System.out.println("║  TEST GENERAL COMPLETADO — " + certificado.getIdCertificado() + "  ║");

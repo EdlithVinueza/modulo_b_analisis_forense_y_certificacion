@@ -38,12 +38,23 @@ public class FirmadorPDFAdapter implements FirmadorPDFPort {
     public byte[] firmarPDF(byte[] pdfSinFirmar, String contrasenaCA) {
         try {
             KeyStore ks = KeyStore.getInstance("PKCS12");
+            char[] pass = (contrasenaCA != null) ? contrasenaCA.toCharArray() : new char[0];
             try (ByteArrayInputStream bis = new ByteArrayInputStream(pkcs12Bytes)) {
-                ks.load(bis, contrasenaCA.toCharArray());
+                try {
+                    ks.load(bis, pass);
+                } catch (Exception e) {
+                    if (pass.length > 0) {
+                        bis.reset();
+                        pass = new char[0];
+                        ks.load(bis, pass);
+                    } else {
+                        throw e;
+                    }
+                }
             }
 
             String alias = obtenerAlias(ks);
-            PrivateKey clavePrivada = (PrivateKey) ks.getKey(alias, contrasenaCA.toCharArray());
+            PrivateKey clavePrivada = (PrivateKey) ks.getKey(alias, pass);
             Certificate[] cadena = ks.getCertificateChain(alias);
 
             // Verificar vigencia del certificado CA

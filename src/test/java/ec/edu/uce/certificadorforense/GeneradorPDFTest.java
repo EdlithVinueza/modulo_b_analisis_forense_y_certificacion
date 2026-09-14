@@ -10,9 +10,11 @@ import ec.edu.uce.certificadorforense.core.model.obra.Obra;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.pdf.GeneradorPDFAdapter;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.qr.QRGeneratorAdapter;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
-import java.io.File;
+import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Base64;
@@ -23,8 +25,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class GeneradorPDFTest {
 
     @Test
-    public void testGenerarPdfConDatosMock() throws Exception {
-        // 1. Mock Autor (Nombre claro no encriptado)
+    public void testGenerarPdfConDatosMock(@TempDir Path tempDir) throws Exception {
+        // 1. Mock Autor
         Autor autor = Autor.builder()
                 .nombres("GONZALO LUIS")
                 .apellidos("BALCAZAR CAMPOVERDE")
@@ -85,12 +87,13 @@ public class GeneradorPDFTest {
                 .qrBase64(qrBase64)
                 .build();
 
-        // 8. Load image preview if available
-        File imgFile = new File("c:\\Users\\edlit\\OneDrive\\Documentos\\TESIS\\Codigo\\pruebas\\girasol-original.png");
+        // 8. Cargar imagen de prueba desde test resources
         String imgBase64 = "";
-        if (imgFile.exists()) {
-            byte[] imgBytes = Files.readAllBytes(imgFile.toPath());
-            imgBase64 = Base64.getEncoder().encodeToString(imgBytes);
+        try (InputStream is = getClass().getResourceAsStream("/fixtures/girasol-sample.png")) {
+            if (is != null) {
+                byte[] imgBytes = is.readAllBytes();
+                imgBase64 = Base64.getEncoder().encodeToString(imgBytes);
+            }
         }
 
         // 9. Render PDF
@@ -100,9 +103,10 @@ public class GeneradorPDFTest {
         assertNotNull(pdfBytes);
         assertTrue(pdfBytes.length > 0);
 
-        // Save PDF artifact for inspection
-        File outputFile = new File("c:\\Users\\edlit\\OneDrive\\Documentos\\TESIS\\Codigo\\pruebas\\test_certificado_mock.pdf");
-        Files.write(outputFile.toPath(), pdfBytes);
-        System.out.println("[GeneradorPDFTest] PDF de prueba generado exitosamente en: " + outputFile.getAbsolutePath());
+        // 10. Guardar artefacto en directorio transitorio gestionado (@TempDir)
+        Path outputFile = tempDir.resolve("test_certificado_mock.pdf");
+        Files.write(outputFile, pdfBytes);
+        assertTrue(Files.exists(outputFile));
+        assertTrue(Files.size(outputFile) > 0);
     }
 }

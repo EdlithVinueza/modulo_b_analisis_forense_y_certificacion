@@ -38,4 +38,7 @@ public class ExpedienteForenseEntity extends PanacheEntityBase {
 
     @Column(name = "fecha_analisis")
     public LocalDateTime fechaAnalisis;
+
+    @Column(name = "imagen_raw")
+    public byte[] imagenRaw;
 }

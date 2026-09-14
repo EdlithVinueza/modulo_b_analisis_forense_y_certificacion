@@ -28,6 +28,7 @@ import java.util.UUID;
  * capa de aplicación a las entidades JPA.
  */
 @ApplicationScoped
+@Transactional
 public class ExpedienteJpaRepositoryAdapter implements ExpedienteRepositoryPort {
 
     @Inject
@@ -53,24 +54,92 @@ public class ExpedienteJpaRepositoryAdapter implements ExpedienteRepositoryPort 
     }
 
     @Override
+    public void crearBorradorAnalisis(String idExpediente, UUID usuarioId, String hashPsd, String hashImagen,
+                                       String phash, String evidenciaTecnicaJson, byte[] imagenRaw) {
+        UsuarioEntity usuario = usuarioId != null ? UsuarioEntity.findById(usuarioId) : null;
+        if (usuario == null) {
+            usuario = UsuarioEntity.find("activo", true).firstResult();
+            if (usuario == null) {
+                usuario = UsuarioEntity.findAll().firstResult();
+            }
+        }
+
+        ObraEntity obraEntity = new ObraEntity();
+        obraEntity.id = UUID.randomUUID();
+        obraEntity.usuario = usuario;
+        obraEntity.titulo = "Borrador de análisis forense";
+        obraEntity.fechaRegistro = LocalDateTime.now();
+        obraEntity.estadoActual = "ANALIZADO";
+        obraEntity.persist();
+
+        ExpedienteForenseEntity expDb = new ExpedienteForenseEntity();
+        expDb.id = UUID.fromString(idExpediente);
+        expDb.obra = obraEntity;
+        expDb.hashPsdOriginal = hashPsd;
+        expDb.hashImagenFinal = hashImagen;
+        expDb.phashImagenString = phash;
+        expDb.similitudPhash = new java.math.BigDecimal("99.99");
+        expDb.resultadoAnalisis = "APROBADO";
+        expDb.evidenciaTecnicaJson = evidenciaTecnicaJson;
+        expDb.fechaAnalisis = LocalDateTime.now();
+        expDb.imagenRaw = imagenRaw;
+        expDb.persist();
+
+        HistorialEstadoEntity hist = new HistorialEstadoEntity();
+        hist.id = UUID.randomUUID();
+        hist.obra = obraEntity;
+        hist.estadoAnterior = "INICIADO";
+        hist.estadoNuevo = "ANALIZADO";
+        hist.fechaCambio = LocalDateTime.now();
+        hist.observacion = "Fase 1 completada. Análisis forense aprobado y registrado como borrador.";
+        hist.persist();
+    }
+
+    @Override
+    public byte[] obtenerImagenRaw(String idExpediente) {
+        ExpedienteForenseEntity expDb = ExpedienteForenseEntity.findById(UUID.fromString(idExpediente));
+        return expDb != null ? expDb.imagenRaw : null;
+    }
+
+    @Override
+    public void limpiarImagenRaw(String idExpediente) {
+        ExpedienteForenseEntity expDb = ExpedienteForenseEntity.findById(UUID.fromString(idExpediente));
+        if (expDb != null) {
+            expDb.imagenRaw = null;
+            expDb.persist();
+        }
+    }
+
+    @Override
     public Optional<ExpedienteResumen> buscarResumenPorId(String idExpediente) {
         ExpedienteForenseEntity exp = ExpedienteForenseEntity.findById(UUID.fromString(idExpediente));
         return Optional.ofNullable(exp).map(this::toResumen);
     }
 
     private ExpedienteResumen toResumen(ExpedienteForenseEntity exp) {
-        UsuarioEntity usuario = exp.obra.usuario;
+        ObraEntity obra = exp.obra;
+        UsuarioEntity usuario = obra != null ? obra.usuario : null;
         return ExpedienteResumen.builder()
                 .idExpediente(exp.id)
-                .obraId(exp.obra.id)
-                .estadoActual(exp.obra.estadoActual)
+                .obraId(obra != null ? obra.id : null)
+                .estadoActual(obra != null ? obra.estadoActual : null)
                 .hashPsdOriginal(exp.hashPsdOriginal)
                 .hashImagenFinal(exp.hashImagenFinal)
                 .phashImagenString(exp.phashImagenString)
                 .evidenciaTecnicaJson(exp.evidenciaTecnicaJson)
                 .usuarioId(usuario != null ? usuario.id : null)
-                .usuarioCedula(usuario != null ? vaultEncryptionService.decrypt(usuario.cedula) : null)
+                .usuarioCedula(usuario != null && usuario.cedula != null ? vaultEncryptionService.decrypt(usuario.cedula) : null)
                 .usuarioFirmaP12(usuario != null ? usuario.firmaP12 : null)
+                .usuarioNombres(usuario != null && usuario.nombres != null ? vaultEncryptionService.decrypt(usuario.nombres) : null)
+                .usuarioApellidos(usuario != null && usuario.apellidos != null ? vaultEncryptionService.decrypt(usuario.apellidos) : null)
+                .usuarioCorreo(usuario != null ? usuario.correo : null)
+                .usuarioNombreArtistico(usuario != null ? usuario.nombreArtistico : null)
+                .obraTitulo(obra != null ? obra.titulo : null)
+                .obraDescripcion(obra != null ? obra.descripcion : null)
+                .obraCategoria(obra != null ? obra.categoria : null)
+                .obraSoftware(obra != null ? obra.software : null)
+                .obraHardware(obra != null ? obra.hardware : null)
+                .obraFechaCreacion(obra != null ? obra.fechaCreacion : null)
                 .build();
     }
 
@@ -179,14 +248,22 @@ public class ExpedienteJpaRepositoryAdapter implements ExpedienteRepositoryPort 
         hist.id = UUID.randomUUID();
         hist.obra = obraEntity;
         hist.estadoAnterior = obraEntity.estadoActual;
-        hist.estadoNuevo = obraEntity.estadoActual;
+        hist.estadoNuevo = "ESPERANDO_FIRMA";
         hist.fechaCambio = LocalDateTime.now();
-        hist.observacion = "Rectificación de datos de Fase 2.";
+        hist.observacion = "Fase 2 completada. Datos de obra y declaraciones registradas.";
         hist.persist();
+
+        obraEntity.estadoActual = "ESPERANDO_FIRMA";
+        obraEntity.persist();
     }
 
     @Override
     public void guardarFirma(String idExpediente, FirmaAutor firma) {
+        guardarFirma(idExpediente, firma, null);
+    }
+
+    @Override
+    public void guardarFirma(String idExpediente, FirmaAutor firma, String expedienteJson) {
         ExpedienteForenseEntity expDb = ExpedienteForenseEntity.findById(UUID.fromString(idExpediente));
 
         FirmaAutorEntity firmaDb = FirmaAutorEntity.find("expediente", expDb).firstResult();
@@ -200,6 +277,9 @@ public class ExpedienteJpaRepositoryAdapter implements ExpedienteRepositoryPort 
         firmaDb.firmaBase64 = firma.getFirmaBase64();
         firmaDb.algoritmo = firma.getAlgoritmo();
         firmaDb.fechaFirma = LocalDateTime.now();
+        if (expedienteJson != null) {
+            firmaDb.expedienteJson = expedienteJson;
+        }
         firmaDb.persist();
 
         HistorialEstadoEntity hist = new HistorialEstadoEntity();
@@ -216,7 +296,28 @@ public class ExpedienteJpaRepositoryAdapter implements ExpedienteRepositoryPort 
     }
 
     @Override
+    public Optional<FirmaAutor> buscarFirmaPorExpedienteId(String idExpediente) {
+        ExpedienteForenseEntity expDb = ExpedienteForenseEntity.findById(UUID.fromString(idExpediente));
+        if (expDb == null) return Optional.empty();
+        FirmaAutorEntity firmaDb = FirmaAutorEntity.find("expediente", expDb).firstResult();
+        if (firmaDb == null) return Optional.empty();
+        return Optional.of(FirmaAutor.builder()
+                .idFirma(firmaDb.id.toString())
+                .idExpediente(idExpediente)
+                .hashExpediente(firmaDb.hashFirmado)
+                .firmaBase64(firmaDb.firmaBase64)
+                .algoritmo(firmaDb.algoritmo)
+                .expedienteJson(firmaDb.expedienteJson)
+                .build());
+    }
+
+    @Override
     public void guardarCertificado(String idExpediente, Certificado certificado, String expedienteFirmadoJson) {
+        guardarCertificado(idExpediente, certificado, expedienteFirmadoJson, null);
+    }
+
+    @Override
+    public void guardarCertificado(String idExpediente, Certificado certificado, String expedienteFirmadoJson, byte[] paqueteZip) {
         ExpedienteForenseEntity expDb = ExpedienteForenseEntity.findById(UUID.fromString(idExpediente));
 
         CertificadoEntity certDb = CertificadoEntity.find("obra", expDb.obra).firstResult();
@@ -231,6 +332,9 @@ public class ExpedienteJpaRepositoryAdapter implements ExpedienteRepositoryPort 
         certDb.rutaPdfNube = "DB_BLOB";
         certDb.rutaPngNube = "DB_BLOB";
         certDb.fechaEmision = LocalDateTime.now();
+        if (paqueteZip != null) {
+            certDb.paqueteZip = paqueteZip;
+        }
         certDb.persist();
 
         HistorialEstadoEntity hist = new HistorialEstadoEntity();
@@ -244,6 +348,14 @@ public class ExpedienteJpaRepositoryAdapter implements ExpedienteRepositoryPort 
 
         expDb.obra.estadoActual = "FINALIZADO";
         expDb.obra.persist();
+    }
+
+    @Override
+    public byte[] obtenerZipCertificado(String idExpediente) {
+        ExpedienteForenseEntity expDb = ExpedienteForenseEntity.findById(UUID.fromString(idExpediente));
+        if (expDb == null || expDb.obra == null) return null;
+        CertificadoEntity certDb = CertificadoEntity.find("obra", expDb.obra).firstResult();
+        return certDb != null ? certDb.paqueteZip : null;
     }
 
     @Override
