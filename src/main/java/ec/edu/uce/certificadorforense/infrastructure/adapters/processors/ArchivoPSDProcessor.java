@@ -6,7 +6,6 @@ import ec.edu.uce.certificadorforense.core.model.psd.MetadatosPSD;
 import ec.edu.uce.certificadorforense.core.model.psd.EstructuraCapaPSD;
 
 import java.io.File;
-import java.nio.file.Files;
 import java.util.List;
 
 /**
@@ -27,13 +26,6 @@ public class ArchivoPSDProcessor implements ArchivoProcessorPort<ArchivoPSD> {
             throw new IllegalArgumentException("El archivo es inválido o no existe.");
         }
 
-        byte[] bytes;
-        try {
-            bytes = Files.readAllBytes(file.toPath());
-        } catch (Exception e) {
-            bytes = new byte[0];
-        }
-
         // Extraer metadatos y capas estructurales en paralelo
         java.util.concurrent.CompletableFuture<MetadatosPSD> futureMetadatos = java.util.concurrent.CompletableFuture.supplyAsync(() -> metadatosService.procesarArchivo(file));
         java.util.concurrent.CompletableFuture<List<EstructuraCapaPSD>> futureCapas = java.util.concurrent.CompletableFuture.supplyAsync(() -> ExtractorCapasPSD.extraer(file.getAbsolutePath()));
@@ -47,7 +39,6 @@ public class ArchivoPSDProcessor implements ArchivoProcessorPort<ArchivoPSD> {
         return ArchivoPSD.builder()
                 .archivo(file)
                 .nombreArchivo(file.getName())
-                .contenidoBytes(bytes)
                 .tamanoBytes(file.length())
                 .metadatos(metadatos)
                 .capas(capas)

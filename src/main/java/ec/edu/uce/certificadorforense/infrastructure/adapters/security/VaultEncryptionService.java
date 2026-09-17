@@ -25,6 +25,7 @@ import java.util.Base64;
  * cualquier variación en el fallback local para la credencial P12 propia de B.
  */
 @ApplicationScoped
+public class VaultEncryptionService implements ec.edu.uce.certificadorforense.core.ports.out.EncryptionPort {
 public class VaultEncryptionService {
 
     private static final Logger log = Logger.getLogger(VaultEncryptionService.class);
@@ -32,7 +33,7 @@ public class VaultEncryptionService {
     @Inject
     CryptographyClient cryptoClient;
 
-    @ConfigProperty(name = "tesis.encryption.allow-insecure-fallback", defaultValue = "true")
+    @ConfigProperty(name = "tesis.encryption.allow-insecure-fallback", defaultValue = "false")
     boolean allowInsecureFallback;
 
     private static final String AES_ALGORITHM = "AES/GCM/NoPadding";
@@ -59,6 +60,7 @@ public class VaultEncryptionService {
         return result;
     }
 
+    @Override
     public String encrypt(String plainText) {
         if (plainText == null || plainText.isEmpty()) return plainText;
 
@@ -98,6 +100,7 @@ public class VaultEncryptionService {
         }
     }
 
+    @Override
     public String decrypt(String combinedBase64) {
         if (combinedBase64 == null || combinedBase64.isEmpty()) return combinedBase64;
 

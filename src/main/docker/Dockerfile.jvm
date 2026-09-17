@@ -11,7 +11,7 @@
 #   se inyectan como variables de entorno / secretos del servicio de Azure,
 #   nunca quedan horneadas en la imagen.
 ####
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 
 ENV LANGUAGE='en_US:en'
 
@@ -31,4 +31,4 @@ EXPOSE 8080
 ENV JAVA_OPTS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
 ENV JAVA_APP_JAR="/deployments/quarkus-run.jar"
 
-ENTRYPOINT ["java", "-jar", "/deployments/quarkus-run.jar"]
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /deployments/quarkus-run.jar"]

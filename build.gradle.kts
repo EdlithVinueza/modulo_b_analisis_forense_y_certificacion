@@ -7,6 +7,14 @@ plugins {
 group = "org.example"
 version = "1.0-SNAPSHOT"
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(25))
+    }
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
+
 repositories {
     mavenCentral()
 }
@@ -36,6 +44,11 @@ dependencies {
     // secretos, no operaciones de cifrado con una llave.
     implementation("com.azure:azure-security-keyvault-keys:4.10.6")
     implementation("com.azure:azure-identity:1.13.0")
+
+    // Azure Blob Storage — almacenamiento de archivos originales y resultados (Fase 1)
+    implementation("com.azure:azure-storage-blob:12.29.1")
+    // Azure Queue Storage — cola de trabajos de procesamiento asíncrono (Fase 1)
+    implementation("com.azure:azure-storage-queue:12.24.1")
 
     // Verificación de JWT emitido por Módulo A (autenticación de CertificacionResource)
     implementation("io.quarkus:quarkus-smallrye-jwt")
