@@ -7,8 +7,8 @@ import ec.edu.uce.certificadorforense.core.model.obra.CategoriaObra;
 import ec.edu.uce.certificadorforense.core.model.obra.Declaraciones;
 import ec.edu.uce.certificadorforense.core.model.obra.Obra;
 import ec.edu.uce.certificadorforense.core.ports.in.RegistrarDatosObraUseCase;
+import ec.edu.uce.certificadorforense.core.ports.out.EncryptionPort;
 import ec.edu.uce.certificadorforense.core.ports.out.ExpedienteRepositoryPort;
-import ec.edu.uce.certificadorforense.infrastructure.adapters.security.VaultEncryptionService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -24,7 +24,7 @@ public class RegistrarDatosObraUseCaseImpl implements RegistrarDatosObraUseCase 
     ExpedienteRepositoryPort expedienteRepository;
 
     @Inject
-    VaultEncryptionService vaultEncryptionService;
+    EncryptionPort encryptionPort;
 
     private static boolean esDuplicadoBloqueante(ExpedienteResumen exp) {
         return exp != null && ("CERTIFICADO".equals(exp.getEstadoActual()) || "FINALIZADO".equals(exp.getEstadoActual()));
@@ -36,9 +36,9 @@ public class RegistrarDatosObraUseCaseImpl implements RegistrarDatosObraUseCase 
         ExpedienteResumen expDb = expedienteRepository.buscarResumenPorId(idExpediente)
                 .orElseThrow(() -> new RuntimeException("Expediente no encontrado o no ha sido analizado en Fase 1."));
 
-        String nombresDec = usuarioDb.getNombres() != null ? vaultEncryptionService.decrypt(usuarioDb.getNombres()) : "";
-        String apellidosDec = usuarioDb.getApellidos() != null ? vaultEncryptionService.decrypt(usuarioDb.getApellidos()) : "";
-        String cedulaDec = usuarioDb.getCedula() != null ? vaultEncryptionService.decrypt(usuarioDb.getCedula()) : "";
+        String nombresDec = usuarioDb.getNombres() != null ? encryptionPort.decrypt(usuarioDb.getNombres()) : "";
+        String apellidosDec = usuarioDb.getApellidos() != null ? encryptionPort.decrypt(usuarioDb.getApellidos()) : "";
+        String cedulaDec = usuarioDb.getCedula() != null ? encryptionPort.decrypt(usuarioDb.getCedula()) : "";
 
         Autor autor = Autor.builder()
                 .nombres(nombresDec)

@@ -86,20 +86,38 @@ public class ImageLoader {
     }
 
     /**
-     * Escanea los píxeles de la imagen. Si detecta transparencias (Alpha < 255), lanza una excepción
-     * para bloquear el proceso por razones de integridad forense.
+     * Escanea los píxeles de la imagen de forma optimizada por bloques de escaneo (sin bucle lento getRGB individual).
+     * Si detecta transparencias (Alpha < 255), lanza una excepción para bloquear el proceso por razones de integridad forense.
      */
     private static void validarTransparencia(BufferedImage img) {
-        if (img != null && img.getColorModel().hasAlpha()) {
-            int width = img.getWidth();
-            int height = img.getHeight();
-            // Escaneo a nivel de píxel
+        if (img == null || img.getTransparency() == java.awt.Transparency.OPAQUE || !img.getColorModel().hasAlpha()) {
+            return;
+        }
+
+        int width = img.getWidth();
+        int height = img.getHeight();
+
+        java.awt.image.Raster alphaRaster = img.getAlphaRaster();
+        if (alphaRaster != null) {
+            int[] rowSamples = new int[width];
             for (int y = 0; y < height; y++) {
+                alphaRaster.getSamples(0, y, width, 1, 0, rowSamples);
                 for (int x = 0; x < width; x++) {
-                    int alpha = (img.getRGB(x, y) >> 24) & 0xff;
-                    if (alpha < 255) {
+                    if (rowSamples[x] < 255) {
                         throw new RuntimeException("Error de validación forense: La obra contiene transparencias. Para garantizar la integridad criptográfica entre el archivo fuente (PSD) y la imagen final, la obra debe tener una capa de fondo sólida (ej. blanca).");
                     }
+                }
+            }
+            return;
+        }
+
+        // Fallback optimizado: lee filas completas a memoria en vez de llamada pixel a pixel
+        int[] row = new int[width];
+        for (int y = 0; y < height; y++) {
+            img.getRGB(0, y, width, 1, row, 0, width);
+            for (int x = 0; x < width; x++) {
+                if (((row[x] >>> 24) & 0xff) < 255) {
+                    throw new RuntimeException("Error de validación forense: La obra contiene transparencias. Para garantizar la integridad criptográfica entre el archivo fuente (PSD) y la imagen final, la obra debe tener una capa de fondo sólida (ej. blanca).");
                 }
             }
         }

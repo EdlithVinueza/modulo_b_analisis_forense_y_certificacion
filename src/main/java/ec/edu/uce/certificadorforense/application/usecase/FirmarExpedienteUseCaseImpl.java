@@ -10,9 +10,9 @@ import ec.edu.uce.certificadorforense.core.model.obra.CategoriaObra;
 import ec.edu.uce.certificadorforense.core.model.obra.Obra;
 import ec.edu.uce.certificadorforense.core.ports.in.EmitirCertificadoUseCase;
 import ec.edu.uce.certificadorforense.core.ports.in.FirmarExpedienteUseCase;
+import ec.edu.uce.certificadorforense.core.ports.out.EncryptionPort;
 import ec.edu.uce.certificadorforense.core.ports.out.ExpedienteRepositoryPort;
 import ec.edu.uce.certificadorforense.core.ports.out.FirmadorNubePort;
-import ec.edu.uce.certificadorforense.infrastructure.adapters.security.VaultEncryptionService;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -33,7 +33,7 @@ public class FirmarExpedienteUseCaseImpl implements FirmarExpedienteUseCase {
     FirmadorNubePort firmadorNube;
 
     @Inject
-    VaultEncryptionService vaultEncryptionService;
+    EncryptionPort encryptionPort;
 
     @Inject
     EmitirCertificadoUseCase emitirCertificadoUseCase;
@@ -136,8 +136,8 @@ public class FirmarExpedienteUseCaseImpl implements FirmarExpedienteUseCase {
             throw new RuntimeException("El usuario no tiene una firma digital configurada en el sistema.");
         }
 
-        if (vaultEncryptionService != null) {
-            p12Base64 = vaultEncryptionService.decrypt(p12Base64);
+        if (encryptionPort != null) {
+            p12Base64 = encryptionPort.decrypt(p12Base64);
         }
 
         MessageDigest md = MessageDigest.getInstance("SHA-512");

@@ -5,6 +5,8 @@ import ec.edu.uce.certificadorforense.core.ports.in.EmitirCertificadoUseCase;
 import ec.edu.uce.certificadorforense.core.ports.in.FirmarExpedienteUseCase;
 import ec.edu.uce.certificadorforense.core.ports.in.IniciarAnalisisUseCase;
 import ec.edu.uce.certificadorforense.core.ports.in.RegistrarDatosObraUseCase;
+import ec.edu.uce.certificadorforense.core.ports.out.UsuarioRepositoryPort;
+import ec.edu.uce.certificadorforense.core.model.expediente.UsuarioDatos;
 import ec.edu.uce.certificadorforense.infrastructure.adapters.rest.util.TempFileUtil;
 import io.quarkus.security.Authenticated;
 import io.smallrye.common.annotation.Blocking;
@@ -49,7 +51,7 @@ public class CertificacionResource {
     JsonWebToken jwt;
 
     @Inject
-    ec.edu.uce.certificadorforense.infrastructure.adapters.security.BlindIndexService blindIndexService;
+    UsuarioRepositoryPort usuarioRepository;
 
     private Response forbidden(String message) {
         Map<String, String> errorPayload = new HashMap<>();
@@ -81,11 +83,9 @@ public class CertificacionResource {
             java.util.UUID usuarioId = null;
             String cedula = jwt.getClaim("cedula");
             if (cedula != null) {
-                ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.UsuarioEntity usuario =
-                        ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.UsuarioEntity
-                                .find("cedulaHash", blindIndexService.hash(cedula)).firstResult();
-                if (usuario != null) {
-                    usuarioId = usuario.id;
+                java.util.Optional<UsuarioDatos> usuarioOpt = usuarioRepository.buscarPorCedula(cedula);
+                if (usuarioOpt.isPresent()) {
+                    usuarioId = usuarioOpt.get().getId();
                 }
             }
 
@@ -170,29 +170,17 @@ public class CertificacionResource {
                 return forbidden("No puedes registrar datos de obra a nombre de otro usuario.");
             }
 
-            ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.UsuarioEntity usuario =
-                    ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.UsuarioEntity
-                            .find("cedulaHash", blindIndexService.hash(cedula)).firstResult();
+            UsuarioDatos usuarioDatos = usuarioRepository.buscarPorCedula(cedula).orElse(null);
 
-            if (usuario == null) {
+            if (usuarioDatos == null) {
                 return Response.status(Response.Status.NOT_FOUND)
                         .entity("{\"error\": \"Ese número de cédula no se encuentra registrado en nuestro sistema.\"}")
                         .build();
             }
 
-            ec.edu.uce.certificadorforense.core.model.expediente.UsuarioDatos usuarioDatos =
-                    ec.edu.uce.certificadorforense.core.model.expediente.UsuarioDatos.builder()
-                            .id(usuario.id)
-                            .cedula(usuario.cedula)
-                            .nombres(usuario.nombres)
-                            .apellidos(usuario.apellidos)
-                            .correo(usuario.correo)
-                            .nombreArtistico(usuario.nombreArtistico)
-                            .build();
-
             registrarDatosObraUseCase.ejecutar(idExpediente, usuarioDatos, body);
 
-            ec.edu.uce.certificadorforense.infrastructure.adapters.db.entity.UsuarioEntity.getEntityManager().flush();
+            usuarioRepository.flush();
 
             Map<String, String> response = new HashMap<>();
             response.put("mensaje", "Datos guardados y vinculados correctamente en la base de datos.");

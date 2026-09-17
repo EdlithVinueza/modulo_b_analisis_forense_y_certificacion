@@ -97,6 +97,9 @@ public class IniciarAnalisisUseCaseImpl implements IniciarAnalisisUseCase {
             // Calcular pHash de la imagen
             BufferedImage imgImagen = ImageLoader.loadWithSubsampling(imgFile);
             String pHashStr = calcPHash.generarHash(imgImagen);
+            if (imgImagen != null) {
+                imgImagen.flush();
+            }
             contexto.setPHash(pHashStr);
 
             // Verificar Duplicados tempranamente por el hash exacto de la Imagen
@@ -169,6 +172,9 @@ public class IniciarAnalisisUseCaseImpl implements IniciarAnalisisUseCase {
                 psd = processor.procesar(psdFile);
                 BufferedImage imgPSD = ImageLoader.loadWithSubsampling(psdFile);
                 psdPHashStr = calcPHash.generarHash(imgPSD);
+                if (imgPSD != null) {
+                    imgPSD.flush();
+                }
                 cacheManager.guardarPsd(sha512PSD, psd, psdPHashStr);
             }
 

@@ -26,7 +26,6 @@ import java.util.Base64;
  */
 @ApplicationScoped
 public class VaultEncryptionService implements ec.edu.uce.certificadorforense.core.ports.out.EncryptionPort {
-public class VaultEncryptionService {
 
     private static final Logger log = Logger.getLogger(VaultEncryptionService.class);
 
