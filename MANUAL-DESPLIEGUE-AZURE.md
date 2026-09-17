@@ -61,7 +61,53 @@ npm -version
 
 ---
 
-## 3. Paso 0: Selección de Región Óptima para Ecuador
+## 3. Resumen Rápido de Modos de Ejecución
+
+El repositorio incluye 3 métodos listos para usar según lo que necesites hacer:
+
+| Modo | Comando | Cuándo usarlo |
+| :--- | :--- | :--- |
+| **1. Pruebas Locales (Docker Compose)** | `docker compose up --build` | Para probar y evaluar todo el sistema en tu propia computadora sin gastar créditos en Azure. Levanta PostgreSQL, Módulo A, Módulo B y Frontend. |
+| **2. Despliegue Inicial en Azure (Automático)** | `.\desplegar-azure.ps1` | Aprovisiona toda la infraestructura en tu cuenta de Azure en 1 solo paso con región `eastus` y tu Key Vault. |
+| **3. Actualización de Código en Azure** | `.\actualizar-azure.ps1` | Recompila y actualiza Container Apps y el Frontend en Azure sin tocar la base de datos ni alterar Key Vault. |
+| **4. Despliegue Manual Paso a Paso** | Ver secciones a continuación | Para entender o ejecutar cada comando de Azure CLI individualmente. |
+
+### Modo 1: Probar en tu computadora con Docker Compose
+Si solo deseas validar que todo funcione en tu laptop:
+```powershell
+# 1. Compilar los ejecutables de ambos microservicios Java:
+cd modulo-validar; .\gradlew.bat quarkusBuild -x test; cd ..
+cd modulo_b_analisis_forense_y_certificacion; .\gradlew.bat quarkusBuild -x test; cd ..
+
+# 2. Levantar todos los contenedores:
+docker compose up --build
+```
+Una vez levantado, abre tu navegador en:
+- **Frontend Web:** `http://localhost:8085`
+- **Módulo A (Identidad):** `http://localhost:8080/q/health/ready`
+- **Módulo B (Forense):** `http://localhost:8082/q/health/ready`
+
+### Modo 2: Despliegue Automatizado en Azure
+Para subir todo el sistema a tu cuenta de Azure con un solo script:
+```powershell
+# Inicia sesión en tu cuenta de Azure:
+az login
+
+# Ejecuta el script de aprovisionamiento:
+.\desplegar-azure.ps1 -KeyVaultName "tu-keyvault-unico" -ResourceGroup "rg-tesis-forense-eastus"
+```
+
+### Modo 3: Actualizar el Sistema en Azure tras cambios de código
+Cuando modifiques código en cualquier módulo y quieras publicar los cambios a Azure:
+```powershell
+.\actualizar-azure.ps1 -ResourceGroup "rg-tesis-forense-eastus"
+```
+
+---
+
+## 4. Despliegue Manual Paso a Paso en Azure
+
+### 4.1. Paso 0: Selección de Región Óptima para Ecuador
 
 > [!TIP]
 > **¿Por qué elegir `eastus` (East US - Virginia)?**  
