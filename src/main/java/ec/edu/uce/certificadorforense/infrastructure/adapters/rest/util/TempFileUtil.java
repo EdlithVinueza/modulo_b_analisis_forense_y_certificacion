@@ -16,9 +16,18 @@ public final class TempFileUtil {
 
     public static File crearTemporal(FileUpload upload, String prefijo) throws IOException {
         if (upload == null) return null;
-        Path tempPath = Files.createTempFile(prefijo + "-", "-" + upload.fileName());
-        Files.copy(upload.uploadedFile(), tempPath, StandardCopyOption.REPLACE_EXISTING);
-        return tempPath.toFile();
+        if (upload.uploadedFile() != null && Files.exists(upload.uploadedFile())) {
+            Path tempPath = Files.createTempFile(prefijo + "-", "-" + upload.fileName());
+            try {
+                // Movimiento atómico instantáneo (rename en el mismo filesystem sin I/O en disco)
+                Files.move(upload.uploadedFile(), tempPath, StandardCopyOption.REPLACE_EXISTING);
+                return tempPath.toFile();
+            } catch (Exception e) {
+                // Si el filesystem no permite move atómico, retornamos el archivo temporal directo
+                return upload.uploadedFile().toFile();
+            }
+        }
+        return null;
     }
 
     public static void borrarSilencioso(File file) {

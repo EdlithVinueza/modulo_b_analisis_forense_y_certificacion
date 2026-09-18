@@ -34,6 +34,8 @@ public class SHA512Adapter implements GeneradorHashPort {
         return calcularSHA512(texto.getBytes(StandardCharsets.UTF_8));
     }
 
+    private static final char[] HEX_ARRAY = "0123456789abcdef".toCharArray();
+
     @Override
     public String calcularSHA512(File archivo) throws IOException {
         try {
@@ -41,7 +43,7 @@ public class SHA512Adapter implements GeneradorHashPort {
             try (FileInputStream fis = new FileInputStream(archivo);
                  DigestInputStream dis = new DigestInputStream(fis, digest)) {
                 
-                byte[] buffer = new byte[8192];
+                byte[] buffer = new byte[65536]; // 64 KB buffer para lectura masiva eficiente
                 while (dis.read(buffer) != -1) {
                     // El DigestInputStream actualiza el MessageDigest internamente
                 }
@@ -54,10 +56,12 @@ public class SHA512Adapter implements GeneradorHashPort {
     }
 
     private String bytesAHex(byte[] bytes) {
-        StringBuilder sb = new StringBuilder(bytes.length * 2);
-        for (byte b : bytes) {
-            sb.append(String.format("%02x", b));
+        char[] hexChars = new char[bytes.length * 2];
+        for (int j = 0; j < bytes.length; j++) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = HEX_ARRAY[v >>> 4];
+            hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
         }
-        return sb.toString();
+        return new String(hexChars);
     }
 }
